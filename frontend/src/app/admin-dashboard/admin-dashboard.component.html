@@ -1,0 +1,98 @@
+<div class="admin-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo p-6 mb-4">
+      <span style="font-size: 24px;">🏛️</span>
+      <span style="font-size: 24px; font-weight: 900; margin-left: 10px;">Turf<span class="text-gold">Admin</span></span>
+    </div>
+
+    <div class="admin-badge">Super Admin</div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-item active">📊 Platform Overview</div>
+      <div class="nav-item">🏟️ Manage Arenas</div>
+      <div class="nav-item">📈 Revenue Analytics</div>
+      <div class="nav-item">⚙️ Global Settings</div>
+    </nav>
+
+    <div class="sidebar-footer mt-auto p-6">
+      <button (click)="logout()" style="background: none; border: none; color: #ef4444; font-weight: 700; cursor: pointer;">⏻ Logout Platform</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main-area">
+    <header class="header-row">
+      <div>
+        <h1 style="font-size: 32px; font-weight: 900;">Platform Control Center</h1>
+        <p style="color: #94a3b8;">Overseeing all registered arena networks</p>
+      </div>
+      <div class="user-pill glass-panel" style="padding: 10px 20px; border-radius: 50px;">
+        <span style="color: #FFD700; font-weight: 800;">MASTER ADMIN:</span> {{ user?.full_name }}
+      </div>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let s of stats">
+        <div class="stat-icon">{{ s.icon }}</div>
+        <div>
+          <span class="stat-label">{{ s.label }}</span>
+          <span class="stat-value">{{ s.value }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+      
+      <!-- Pending Approvals -->
+      <div class="glass-panel">
+        <div class="flex justify-between items-center mb-6">
+          <h2 style="font-size: 20px;">⏳ Pending Arena Approvals</h2>
+          <span class="text-gold" style="font-size: 13px;">View All →</span>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Arena Name</th>
+              <th>Owner</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of pendingArenas">
+              <td><strong>{{ a.name }}</strong></td>
+              <td>{{ a.owner }}</td>
+              <td>{{ a.date }}</td>
+              <td><span class="status-tag" [class]="a.status">{{ a.status }}</span></td>
+              <td>
+                <div *ngIf="a.status === 'pending'">
+                  <button class="btn-approve" (click)="approveArena(a)">Approve</button>
+                  <button class="btn-reject" (click)="rejectArena(a)">Reject</button>
+                </div>
+                <div *ngIf="a.status !== 'pending'" class="text-muted text-xs">Actioned</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Subscription Breakdown -->
+      <div class="glass-panel">
+        <h2 style="font-size: 20px; margin-bottom: 24px;">💎 Subscription Revenue</h2>
+        <div class="sub-list" style="display: grid; gap: 20px;">
+          <div *ngFor="let sub of subscriptions" style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; border-left: 4px solid #FFD700;">
+            <div class="flex justify-between mb-2">
+              <span style="font-weight: 800;">{{ sub.plan }}</span>
+              <span class="text-gold">{{ sub.revenue }}</span>
+            </div>
+            <div style="font-size: 13px; color: #94a3b8;">{{ sub.count }} Active Tenants</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>

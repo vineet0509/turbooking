@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
-import { ownerGuard, customerGuard, guestGuard } from './auth.guard';
+import { ownerGuard, customerGuard, guestGuard, adminGuard } from './auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
     canActivate: [guestGuard],
     loadComponent: () => import('./landing/landing.component').then(m => m.LandingComponent),
+  },
+  {
+    path: 'admin',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./admin-dashboard/admin-dashboard.component').then(m => m.AdminDashboardComponent),
   },
   {
     path: 'dashboard',
