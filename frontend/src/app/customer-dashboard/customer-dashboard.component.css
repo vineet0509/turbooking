@@ -1,0 +1,202 @@
+.customer-shell {
+  min-height: 100vh;
+  background: #0a0f16;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ── Stadium Theme Nav ── */
+.customer-nav {
+  background: rgba(10, 15, 22, 0.8);
+  backdrop-filter: blur(20px);
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.user-greeting {
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+/* ── Page Layout ── */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.page-header h1 {
+  font-size: 32px;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+/* ── Bookings Grid ── */
+.bookings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.booking-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 24px;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.booking-card:hover {
+  transform: translateY(-8px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(16, 185, 129, 0.3);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.card-status {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.confirmed {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+}
+
+.status-badge.cancelled {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.turf-info h3 {
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.booking-ref {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+.booking-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.value {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ── Refund Label ── */
+.refund-status-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #10B981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  padding: 80px 40px;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border: 2px dashed rgba(255,255,255,0.05);
+  border-radius: 30px;
+}
+
+.empty-icon { font-size: 64px; margin-bottom: 24px; }
+
+/* ── Footer ── */
+.customer-footer {
+  margin-top: 80px;
+  padding: 40px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.footer-links { display: flex; gap: 32px; }
+.footer-links a { color: #64748b; text-decoration: none; transition: 0.2s; }
+.footer-links a:hover { color: var(--primary); }
+
+/* ── Modals (Dark Mode) ── */
+.modal-overlay {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.modal-box {
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+.slot-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: 0.2s;
+  font-weight: 700;
+}
+
+.slot-item:hover { background: rgba(255,255,255,0.06); border-color: var(--primary); }
+.slot-item.selected { background: var(--primary) !important; color: #000; }
+
+.warning-box {
+  background: rgba(245, 158, 11, 0.05);
+  border-left: 4px solid #F59E0B;
+  padding: 16px;
+  border-radius: 0 12px 12px 0;
+}

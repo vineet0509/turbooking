@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+media/
+static/
+staticfiles/
+
+# Angular
+**/node_modules/
+**/dist/
+**/.angular/
+**/tmp/
+**/out-tsc/
+**/.vscode/
+**/.idea/
+**/.DS_Store
+
+# Environments
+.env
+.venv
+venv/
+ENV/
+
+# System
+Thumbs.db
+Desktop.ini

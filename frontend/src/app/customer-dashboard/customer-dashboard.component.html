@@ -1,0 +1,179 @@
+<div class="customer-shell">
+  <nav class="customer-nav glass-panel">
+    <div class="container flex justify-between items-center">
+      <div class="logo">
+        <span class="logo-icon">🏟️</span>
+        <span class="logo-text">Turf<span class="text-gradient">Book</span></span>
+      </div>
+      <div class="user-menu flex items-center gap-4">
+        <span class="user-greeting">Hi, {{ user?.first_name }}! 👋</span>
+        <button class="btn btn-outline btn-sm" (click)="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mt-8 animate-fade-in">
+    <header class="page-header mb-8 flex justify-between items-end">
+      <div>
+        <h1>My Bookings</h1>
+        <p class="text-muted">Manage your upcoming turf sessions and history</p>
+      </div>
+      <button class="btn btn-primary" (click)="openNewBooking()">+ Book New Turf</button>
+    </header>
+
+    <div class="bookings-grid">
+      <div class="glass-card booking-card" *ngFor="let b of myBookings">
+        <div class="card-status">
+          <span class="status-badge" [class]="b.status">{{ b.status }}</span>
+        </div>
+        <div class="turf-info">
+          <h3>{{ b.turf }}</h3>
+          <p class="booking-ref">{{ b.id }}</p>
+        </div>
+        <div class="booking-details">
+          <div class="detail-item">
+            <span class="label">Date</span>
+            <span class="value">{{ b.date }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Time Slot</span>
+            <span class="value">{{ b.time }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">Paid Amount</span>
+            <span class="value text-gradient font-bold">{{ b.amount }}</span>
+          </div>
+        </div>
+
+        <div class="booking-status-info" *ngIf="b.status === 'cancelled'">
+          <div *ngIf="b.reason" class="text-muted mb-2" style="font-size: 12px;">Reason: {{ b.reason }}</div>
+          <div *ngIf="b.refundStatus" class="refund-status-label">Refund: {{ b.refundStatus }}</div>
+        </div>
+
+        <div class="card-actions flex gap-4 mt-6" *ngIf="b.status === 'confirmed'">
+          <button class="btn btn-outline flex-1" (click)="openReschedule(b)">Reschedule</button>
+          <button class="btn btn-outline danger-text flex-1" (click)="openCancel(b)">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="empty-state glass-panel" *ngIf="myBookings.length === 0">
+      <div class="empty-icon">📅</div>
+      <h3>No Bookings Found</h3>
+      <p class="text-muted">You haven't booked any turfs yet. Start playing!</p>
+      <button class="btn btn-primary mt-4" (click)="router.navigate(['/'])">Find Turfs Near Me</button>
+    </div>
+
+    <!-- Customer Footer -->
+    <footer class="customer-footer">
+      <div class="footer-links">
+        <a href="javascript:void(0)" (click)="openTerms()">Terms & Conditions</a>
+        <a href="javascript:void(0)" (click)="openContact()">Contact Us</a>
+      </div>
+      <div class="footer-copyright">
+        © 2026 TurfBook. All rights reserved.
+      </div>
+    </footer>
+  </main>
+
+  <!-- ── Cancel Modal ── -->
+  <div class="modal-overlay" *ngIf="showCancelModal" (click)="showCancelModal = false">
+    <div class="modal-box glass-panel" (click)="$event.stopPropagation()">
+      <h2>Confirm Cancellation</h2>
+      <p class="text-muted mt-4">Are you sure you want to cancel your booking at <strong>{{ selectedBooking?.turf }}</strong>?</p>
+      <div class="warning-box mt-4">
+        <div class="warning-header">⚠️ Cancellation Policy</div>
+        <ul style="font-size: 13px; margin-top: 8px; padding-left: 20px;">
+          <li>Can only cancel 30 mins before the start time.</li>
+          <li>20% cancellation charge applies for late cancellations.</li>
+        </ul>
+      </div>
+      <div class="refund-preview mt-6">
+        <div class="flex justify-between"><span>Paid Amount:</span><span>{{ selectedBooking?.amount }}</span></div>
+        <div class="flex justify-between text-gradient font-bold mt-2"><span>Estimated Refund:</span><span>{{ selectedBooking ? getRefundAmount(selectedBooking.amount) : '₹0' }}</span></div>
+      </div>
+      <div class="form-group mt-6">
+        <label class="label mb-2 block">Reason for Cancellation</label>
+        <textarea [(ngModel)]="cancelReason" name="creason" class="form-control" rows="3" placeholder="e.g. Change of plans" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 100%; border-radius: 12px; padding: 12px;"></textarea>
+      </div>
+      <div class="modal-actions flex gap-4 mt-8">
+        <button class="btn btn-outline flex-1" (click)="showCancelModal = false">Keep Booking</button>
+        <button class="btn btn-primary danger-btn flex-1" (click)="confirmCancel()">Confirm & Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── New Booking Modal ── -->
+  <div class="modal-overlay" *ngIf="showNewBookingModal" (click)="showNewBookingModal = false">
+    <div class="modal-box glass-panel" style="max-width: 500px;" (click)="$event.stopPropagation()">
+      
+      <!-- Step 1: Selection -->
+      <div *ngIf="bookingStep === 'details'">
+        <div class="panel-header mb-6"><h2>📅 Book New Session</h2></div>
+        <div class="booking-form-grid" style="display: grid; gap: 20px;">
+          <div class="form-group"><label class="label mb-2 block">Select Arena</label>
+            <select [(ngModel)]="newBookingForm.turf" class="form-control" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 12px;">
+              <option value="Green Arena">Green Arena</option>
+              <option value="City Sports Club">City Sports Club</option>
+              <option value="Downtown Football">Downtown Football</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="label mb-2 block">Select Date</label>
+            <input type="date" [(ngModel)]="newBookingForm.date" class="form-control" style="width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 12px; border-radius: 12px;">
+          </div>
+          <div class="form-group"><label class="label mb-2 block">Select Time Slot</label>
+            <div class="slots-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+              <div class="slot-item" *ngFor="let s of availableSlots" [class.selected]="newBookingForm.time === s.time" [class.booked]="isSlotBooked(s.time)" (click)="!isSlotBooked(s.time) && newBookingForm.time = s.time">
+                {{ s.time }}
+                <div *ngIf="isSlotBooked(s.time)" style="font-size: 8px; color: #ef4444;">Booked</div>
+              </div>
+            </div>
+          </div>
+          <div class="payment-summary mt-4" style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+            <div class="flex justify-between" style="font-size: 18px; font-weight: 900; color: #10B981;"><span>Total Amount:</span><span>₹1,000</span></div>
+          </div>
+        </div>
+        <div class="modal-actions flex gap-4 mt-8">
+          <button class="btn btn-outline flex-1" (click)="showNewBookingModal = false">Cancel</button>
+          <button class="btn btn-primary flex-1" (click)="goToPayment()" [disabled]="!newBookingForm.date || !newBookingForm.time">Proceed to Pay</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Payment Section -->
+      <div *ngIf="bookingStep === 'payment'">
+        <div class="panel-header mb-6"><h2>💳 Secure Payment</h2></div>
+        <div class="payment-methods" style="display: grid; gap: 12px;">
+          <div class="payment-option active" style="border: 1px solid var(--primary); background: rgba(16, 185, 129, 0.05); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 24px;">💳</span>
+            <div>
+              <div style="font-weight: 700;">Online Payment (Razorpay)</div>
+              <div style="font-size: 12px; color: #94a3b8;">UPI, Cards, Netbanking</div>
+            </div>
+          </div>
+        </div>
+        <div class="payment-info mt-8 p-4 bg-glass rounded-xl border border-white/5">
+          <p style="font-size: 13px; color: #94a3b8; text-align: center;">By clicking below, you agree to our booking and refund policies.</p>
+        </div>
+        <div class="modal-actions flex gap-4 mt-8">
+          <button class="btn btn-outline flex-1" (click)="bookingStep = 'details'">Back</button>
+          <button class="btn btn-primary flex-1" (click)="confirmNewBooking()">Pay ₹1,000 Now</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Processing -->
+      <div *ngIf="bookingStep === 'processing'" style="text-align: center; padding: 40px 0;">
+        <div class="loader-icon animate-spin" style="font-size: 48px; margin-bottom: 24px;">🔄</div>
+        <h2>Processing Payment...</h2>
+        <p class="text-muted mt-2">Connecting to Razorpay secure servers</p>
+      </div>
+
+      <!-- Step 4: Success -->
+      <div *ngIf="bookingStep === 'success'" style="text-align: center; padding: 40px 0;">
+        <div class="success-icon" style="font-size: 64px; color: #10B981; margin-bottom: 24px;">✅</div>
+        <h2 class="text-gradient">Booking Confirmed!</h2>
+        <p class="text-muted mt-2">Your slot at {{ newBookingForm.turf }} is secured.</p>
+      </div>
+
+    </div>
+  </div>
+</div>

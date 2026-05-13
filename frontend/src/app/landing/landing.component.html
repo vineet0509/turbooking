@@ -1,0 +1,331 @@
+<main class="landing-page">
+  <!-- Navigation -->
+  <nav class="navbar animate-fade-in">
+    <div class="container flex justify-between items-center">
+      <div class="logo">
+        <span class="logo-icon">🏟️</span>
+        <span class="logo-text">Turf<span class="text-gradient">Book</span></span>
+      </div>
+      <div class="nav-links flex gap-8">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#demo">Demo</a>
+      </div>
+      <div class="nav-actions flex items-center gap-6">
+        <a href="javascript:void(0)" class="nav-link-secondary" (click)="openLogin()">Customer Portal</a>
+        <button class="btn btn-outline" (click)="openLogin()">Sign In</button>
+        <button class="btn btn-primary" (click)="openRegister()">Get Started</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="container text-center animate-fade-in">
+      <div class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--primary); padding: 6px 16px; border-radius: 30px; display: inline-block; margin-bottom: 24px; font-weight: 600;">🚀 #1 Sports Arena Management Tool</div>
+      <h1 class="hero-title">
+        Run Your Arena <br />
+        <span class="text-gradient">Like a Pro</span>
+      </h1>
+      <p class="hero-subtitle">
+        The complete platform to manage bookings, payments, and customers for Cricket, Football, Badminton, and more. 
+        Automate your business and focus on the game.
+      </p>
+      
+      <div class="hero-cta flex justify-center gap-6">
+        <button class="btn btn-primary btn-large" style="padding: 16px 32px; font-size: 18px;" (click)="openRegister()">Start Free Trial</button>
+        <button class="btn btn-outline btn-large" style="padding: 16px 32px; font-size: 18px;" (click)="scrollToDemo()">Watch Demo</button>
+      </div>
+
+      <!-- Sports Categories Grid -->
+      <div class="sports-categories-grid">
+        <div class="sport-chip">🏏 Cricket</div>
+        <div class="sport-chip">⚽ Football</div>
+        <div class="sport-chip">🏸 Badminton</div>
+        <div class="sport-chip">🎾 Tennis</div>
+        <div class="sport-chip">🏀 Basketball</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Live Stats Strip -->
+  <div class="stats-strip">
+    <div class="container flex justify-between">
+      <div class="stat-item">
+        <span class="stat-num">500+</span>
+        <span class="stat-label">Arenas Managed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">1M+</span>
+        <span class="stat-label">Bookings Processed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num">99.9%</span>
+        <span class="stat-label">System Uptime</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <section id="features" class="features container">
+    <div class="section-header text-center mb-16">
+      <h2 style="font-size: 42px; font-weight: 800;">Everything you need to <span class="text-gradient">Win</span></h2>
+      <p class="text-muted">Powerful features to automate your sports business</p>
+    </div>
+    
+    <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px;">
+      <div class="feature-card">
+        <span class="feature-icon">🌐</span>
+        <h3>Branded Website</h3>
+        <p class="text-muted">Get your own unique subdomain (yourname.turfbook.com) instantly to accept bookings 24/7.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">💳</span>
+        <h3>Digital Payments</h3>
+        <p class="text-muted">Secure Razorpay integration for instant online payments and automated receipts.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🕐</span>
+        <h3>Slot Management</h3>
+        <p class="text-muted">Easily configure pricing, weekend rates, and block slots for private events.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📱</span>
+        <h3>Customer Portal</h3>
+        <p class="text-muted">A dedicated space for your players to manage their bookings and reschedule slots.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Demo/Test Section for Customers -->
+  <section id="demo" class="demo-section container" style="margin-top: 100px; padding: 60px; background: rgba(59, 130, 246, 0.05); border-radius: 24px; border: 1px solid rgba(59, 130, 246, 0.1);">
+    <div class="flex flex-col md:flex-row items-center gap-12">
+      <div class="md:w-1/2">
+        <div class="badge" style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 6px 16px; border-radius: 30px; display: inline-block; margin-bottom: 20px;">🎮 Player Experience</div>
+        <h2 style="font-size: 36px; margin-bottom: 20px;">Test as a <span class="text-gradient">Customer</span></h2>
+        <p class="text-muted mb-8" style="font-size: 18px;">
+          Want to see what your players will see? You can register as a customer to browse turfs, book matches, and manage your schedule.
+        </p>
+        <button class="btn btn-outline" style="border-color: #3b82f6; color: #3b82f6;" (click)="openCustomerRegister()">Register as Customer →</button>
+      </div>
+      <div class="md:w-1/2">
+        <div class="glass-card" style="padding: 32px; border: 1px solid rgba(255,255,255,0.1);">
+          <div class="flex items-center gap-4 mb-6">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 20px;">👤</div>
+            <div>
+              <div style="font-weight: 700;">Arjun Kumar</div>
+              <div class="text-muted" style="font-size: 12px;">Active Player</div>
+            </div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 12px; margin-bottom: 12px;">
+            <div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">UPCOMING BOOKING</div>
+            <div style="font-weight: 700;">Green Arena - Slot A</div>
+            <div style="font-size: 14px; color: var(--text-muted);">Today, 08:00 PM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="demo" class="demo-section">
+    <div class="container">
+      <div class="section-header text-center mb-16">
+        <h2 style="font-size: 42px; font-weight: 800;">Experience the <span class="text-gradient">Ease</span></h2>
+        <p class="text-muted">See how simple it is for your customers to book</p>
+      </div>
+      
+      <div class="demo-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 60px; align-items: center;">
+        <div class="demo-card" style="padding: 32px;">
+          <h3 class="mb-6">Main Court — Badminton</h3>
+          <div class="slot-label">Select an available time</div>
+          <div class="slot-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px;">
+            <div class="slot available" (click)="selectDemoSlot($event)">06:00 PM</div>
+            <div class="slot available" (click)="selectDemoSlot($event)">07:00 PM</div>
+            <div class="slot taken">08:00 PM</div>
+            <div class="slot available selected" (click)="selectDemoSlot($event)">09:00 PM</div>
+            <div class="slot taken">10:00 PM</div>
+            <div class="slot available" (click)="selectDemoSlot($event)">11:00 PM</div>
+          </div>
+        </div>
+
+        <div class="demo-summary-box">
+          <div class="demo-card" style="padding: 32px;" *ngIf="selectedSlot">
+            <h4 style="font-weight: 700; margin-bottom: 20px;">Booking Details</h4>
+            <div class="flex justify-between mt-6">
+              <span class="text-muted">Slot Time:</span>
+              <span style="font-weight: 700;">{{ selectedSlot }}</span>
+            </div>
+            <div class="flex justify-between mt-2">
+              <span class="text-muted">Price:</span>
+              <span>₹800.00</span>
+            </div>
+            <div class="flex justify-between mt-4 pt-4" style="border-top: 1px solid var(--border)">
+              <span style="font-weight: 700;">Grand Total:</span>
+              <span class="text-gradient" style="font-size: 24px; font-weight: 900;">₹800.00</span>
+            </div>
+            <button class="btn btn-primary mt-8" style="width: 100%" (click)="openRegister()">Try It Now →</button>
+          </div>
+          <div class="text-center" *ngIf="!selectedSlot">
+            <p class="text-muted">Select a green slot to see the live booking preview</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="pricing container">
+    <div class="section-header text-center">
+      <h2 class="hero-title">Simple <span class="text-gradient">Pricing</span></h2>
+      <p class="text-muted">Start with our 10-day free trial. No credit card required.</p>
+    </div>
+    
+    <div class="pricing-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px;">
+      <div class="pricing-card">
+        <h3 style="font-size: 24px;">Starter</h3>
+        <div class="price"><span>₹</span>499<span style="font-size: 16px; color: var(--text-muted); font-weight: 400;">/mo</span></div>
+        <ul class="feature-list" style="list-style: none; padding: 0; margin-bottom: 32px;">
+          <li style="margin-bottom: 12px;">✅ 1 Arena Ground</li>
+          <li style="margin-bottom: 12px;">✅ 100 Bookings / mo</li>
+          <li style="margin-bottom: 12px;">✅ Digital Calendar</li>
+          <li style="margin-bottom: 12px;">✅ Email Alerts</li>
+        </ul>
+        <button class="btn btn-outline mt-auto" style="width:100%" (click)="openRegister('starter')">Start Starter</button>
+      </div>
+      
+      <div class="pricing-card popular">
+        <div class="popular-badge" style="background: var(--primary); color: #fff; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);">MOST POPULAR</div>
+        <h3 style="font-size: 24px;">Pro Arena</h3>
+        <div class="price text-gradient"><span>₹</span>999<span style="font-size: 16px; color: var(--text-muted); font-weight: 400;">/mo</span></div>
+        <ul class="feature-list" style="list-style: none; padding: 0; margin-bottom: 32px;">
+          <li style="margin-bottom: 12px;">✅ 3 Arena Grounds</li>
+          <li style="margin-bottom: 12px;">✅ Unlimited Bookings</li>
+          <li style="margin-bottom: 12px;">✅ Razorpay Integration</li>
+          <li style="margin-bottom: 12px;">✅ Analytics Dashboard</li>
+        </ul>
+        <button class="btn btn-primary mt-auto" style="width:100%" (click)="openRegister('pro')">Get Pro Arena</button>
+      </div>
+      
+      <div class="pricing-card">
+        <h3 style="font-size: 24px;">Club Elite</h3>
+        <div class="price"><span>₹</span>1999<span style="font-size: 16px; color: var(--text-muted); font-weight: 400;">/mo</span></div>
+        <ul class="feature-list" style="list-style: none; padding: 0; margin-bottom: 32px;">
+          <li style="margin-bottom: 12px;">✅ 10+ Arena Grounds</li>
+          <li style="margin-bottom: 12px;">✅ Unlimited Everything</li>
+          <li style="margin-bottom: 12px;">✅ WhatsApp Automations</li>
+          <li style="margin-bottom: 12px;">✅ Dedicated Support</li>
+        </ul>
+        <button class="btn btn-outline mt-auto" style="width:100%" (click)="openRegister('business')">Go Elite</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Modals (Register/Login) -->
+  <div class="modal-overlay" *ngIf="showRegisterModal" (click)="closeModal($event)">
+    <div class="modal-box animate-fade-in" (click)="$event.stopPropagation()">
+      <button class="modal-close" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer;" (click)="closeAllModals()">✕</button>
+      <div class="modal-icon">🏟️</div>
+      <h2 style="margin-bottom: 12px;">Create Your Arena</h2>
+      <p class="text-muted" style="margin-bottom: 32px;">Join the #1 sports management platform.</p>
+
+      <div class="error-alert" style="background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px;" *ngIf="registerError">⚠️ {{ registerError }}</div>
+
+      <form (ngSubmit)="submitRegister()" class="register-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">First Name</label><input type="text" [(ngModel)]="registerForm.first_name" name="fn" placeholder="Arjun" required></div>
+          <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Last Name</label><input type="text" [(ngModel)]="registerForm.last_name" name="ln" placeholder="Kumar"></div>
+        </div>
+        <div class="form-group" *ngIf="!isCustomerRegister"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Business Name</label><input type="text" [(ngModel)]="registerForm.businessName" name="bn" placeholder="Green Turf Arena" required></div>
+        <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Email Address</label><input type="email" [(ngModel)]="registerForm.email" name="em" placeholder="arjun&#64;example.com" required></div>
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Password</label><input type="password" [(ngModel)]="registerForm.password" name="pw" placeholder="••••••••" required></div>
+          <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Confirm</label><input type="password" [(ngModel)]="registerForm.confirm_password" name="cpw" placeholder="••••••••" required></div>
+        </div>
+        
+        <div class="form-group terms-group">
+          <label class="checkbox-container">
+            <input type="checkbox" [(ngModel)]="registerForm.agreeTerms" name="agree">
+            <span class="checkmark"></span>
+            <span class="terms-text">I agree to the <a href="javascript:void(0)" class="text-gradient" (click)="openTerms()">Terms & Conditions</a></span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%; padding: 16px; font-size: 16px;" [disabled]="registerLoading">
+          <span *ngIf="!registerLoading">Launch My Arena →</span>
+          <span *ngIf="registerLoading">Launching...</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Terms & Conditions Modal -->
+  <div class="modal-overlay" *ngIf="showTermsModal" (click)="closeAllModals()">
+    <div class="modal-box animate-fade-in" style="max-width: 700px; max-height: 80vh; overflow-y: auto;" (click)="$event.stopPropagation()">
+      <button class="modal-close" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8;" (click)="showTermsModal = false">✕</button>
+      
+      <h2 class="mb-6">Terms & Conditions</h2>
+      
+      <div class="terms-content" style="font-size: 14px; line-height: 1.8; color: var(--text-muted);">
+        <section class="mb-6">
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px;">1. Introduction</h3>
+          <p>Welcome to TurfBook. By registering an account and using our Arena Management SaaS, you agree to comply with and be bound by the following terms and conditions of use.</p>
+        </section>
+
+        <section class="mb-6">
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px;">2. Account Registration</h3>
+          <p>To access our services, you must create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
+        </section>
+
+        <section class="mb-6">
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px;">3. Booking and Payments</h3>
+          <p>TurfBook provides a platform for managing sports arena bookings. All payments processed through the platform are subject to our payment partner (Razorpay) terms. TurfBook is not responsible for disputes between arena owners and their customers regarding physical arena quality or actual gameplay.</p>
+        </section>
+
+        <section class="mb-6">
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px;">4. Cancellation Policy</h3>
+          <p>Standard platform policy allows customers to cancel bookings up to 30 minutes before the start time. A 20% cancellation fee may apply as per the system settings. Arena owners are responsible for honoring confirmed bookings.</p>
+        </section>
+
+        <section class="mb-6">
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px;">5. Subscription and Trials</h3>
+          <p>New owners receive a 10-day free trial. Upon expiration, a paid subscription plan must be selected to continue using the platform's management features.</p>
+        </section>
+
+        <section class="mb-6">
+          <h3 style="color: #fff; font-size: 18px; margin-bottom: 12px;">6. Data Privacy</h3>
+          <p>Your data is handled according to our Privacy Policy. We do not sell your business data to third parties.</p>
+        </section>
+      </div>
+
+      <div class="mt-8 pt-6 border-top" style="border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+        <button class="btn btn-primary" style="width: 200px;" (click)="showTermsModal = false">I Understand</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" *ngIf="showLoginModal" (click)="closeModal($event)">
+    <div class="modal-box animate-fade-in" (click)="$event.stopPropagation()">
+      <button class="modal-close" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer;" (click)="closeAllModals()">✕</button>
+      <div class="modal-icon">🔐</div>
+      <h2 style="margin-bottom: 12px;">Welcome Back</h2>
+      <p class="text-muted" style="margin-bottom: 32px;">Sign in to your account.</p>
+
+      <div class="error-alert" style="background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px;" *ngIf="loginError">⚠️ {{ loginError }}</div>
+
+      <form (ngSubmit)="submitLogin()" class="register-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Email</label><input type="email" [(ngModel)]="loginForm.email" name="lem" placeholder="email&#64;example.com" required></div>
+        <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Password</label><input type="password" [(ngModel)]="loginForm.password" name="lpw" placeholder="••••••••" required></div>
+        
+        <button type="submit" class="btn btn-primary mt-4" style="width:100%; padding: 16px; font-size: 16px;" [disabled]="loginLoading">
+          <span *ngIf="!loginLoading">Sign In →</span>
+          <span *ngIf="loginLoading">Signing in...</span>
+        </button>
+      </form>
+      
+      <p class="modal-switch-text" style="text-align: center; margin-top: 24px; font-size: 14px; color: var(--text-muted);">
+        Don't have an arena? <a href="javascript:void(0)" style="color: var(--primary); font-weight: 700; text-decoration: none;" (click)="switchToRegister()">Create One Now</a>
+      </p>
+    </div>
+  </div>
+
+</main>
