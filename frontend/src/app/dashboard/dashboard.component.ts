@@ -14,8 +14,26 @@ import { Booking, User } from '../models/booking.model';
 })
 export class DashboardComponent implements OnInit {
   user: User | null = null;
-  activeTab: string = 'overview';
-  
+  activeMenu: string = 'dashboard';
+  pageTitle: string = 'Dashboard Overview';
+  today: string = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  // ── Navigation ──────────────────────────────────────────────────────────
+  menuItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'bookings', label: 'All Bookings', icon: '📅' },
+    { id: 'customers', label: 'Customers', icon: '👥' },
+    { id: 'payments', label: 'Payments', icon: '💰' },
+    { id: 'settings', label: 'Arena Settings', icon: '⚙️' },
+  ];
+
+  setMenu(id: string): void {
+    this.activeMenu = id;
+    const item = this.menuItems.find(i => i.id === id);
+    this.pageTitle = item ? item.label : 'Dashboard';
+    this.showNotifications = false;
+  }
+
   // ── Notifications ────────────────────────────────────────────────────────
   showNotifications = false;
   notifications = [
@@ -81,7 +99,11 @@ export class DashboardComponent implements OnInit {
   submitBooking(): void {
     const newB: Booking = {
       id: '#BK' + Math.floor(Math.random() * 10000),
-      ...this.bookingForm,
+      customer: this.bookingForm.customer,
+      phone: this.bookingForm.phone,
+      turf: this.bookingForm.turf,
+      date: this.bookingForm.date,
+      time: this.bookingForm.time,
       amount: '₹' + this.bookingForm.amount,
       status: 'confirmed',
       cancelReason: '',
@@ -90,7 +112,6 @@ export class DashboardComponent implements OnInit {
     this.recentBookings = [newB, ...this.recentBookings];
     this.showBookingModal = false;
     
-    // Add Notification
     this.notifications.unshift({
       id: Date.now(),
       text: `Manual booking added for ${newB.customer}`,
