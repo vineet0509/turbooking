@@ -2,19 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { AuthService, User } from '../services/auth.service';
+import { AuthService } from '../services/auth.service';
 import { BookingService } from '../services/booking.service';
-
-export interface Booking {
-  id: string;
-  turf: string;
-  date: string;
-  time: string;
-  amount: string;
-  status: string;
-  reason?: string;
-  refundStatus?: string;
-}
+import { Booking, User } from '../models/booking.model';
 
 @Component({
   selector: 'app-customer-dashboard',
@@ -30,7 +20,7 @@ export class CustomerDashboardComponent implements OnInit {
 
   showCancelModal = false;
   showRescheduleModal = false;
-  selectedBooking: any = null;
+  selectedBooking: Booking | null = null;
   cancelReason: string = '';
   
   // Real-time Slot Availability Mock
@@ -61,25 +51,24 @@ export class CustomerDashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.user = this.auth.currentUser;
+    this.user = this.auth.currentUser as User;
     this.loadBookings();
     
     this.auth.fetchProfile().subscribe({
-      next: user => this.user = user,
+      next: user => this.user = user as User,
       error: () => this.logout()
     });
   }
 
   loadBookings(): void {
     this.isLoading = true;
-    // For now, combining real API structure with mock data for safety
     this.bookingService.getMyBookings().subscribe({
       next: (data) => {
         this.myBookings = data;
         this.isLoading = false;
       },
       error: () => {
-        // Fallback to mock if API not ready
+        // Fallback to mock
         this.myBookings = [
           { id: '#BK8821', turf: 'Green Arena', date: '2026-05-14', time: '08:00 AM', amount: '₹800', status: 'confirmed', reason: '', refundStatus: '' },
           { id: '#BK8845', turf: 'City Sports Club', date: '2026-05-15', time: '05:00 PM', amount: '₹1,000', status: 'confirmed', reason: '', refundStatus: '' },
@@ -94,18 +83,13 @@ export class CustomerDashboardComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
-  canCancel(booking: any): boolean {
-    return booking.status === 'confirmed'; 
-  }
-
   getRefundAmount(amountStr: string | undefined): string {
     if (!amountStr || !this.selectedBooking) return '₹0';
     const amount = parseInt(amountStr.replace('₹', '').replace(',', ''));
     
     const slotTime = this.parseBookingDate(this.selectedBooking);
     const now = new Date();
-    const diffMs = slotTime.getTime() - now.getTime();
-    const diffMins = diffMs / (1000 * 60);
+    const diffMins = (slotTime.getTime() - now.getTime()) / (1000 * 60);
 
     if (diffMins > 30) {
       return `₹${amount} (Full Refund)`;
@@ -124,7 +108,7 @@ export class CustomerDashboardComponent implements OnInit {
     return new Date(year, month - 1, day, hours, minutes);
   }
 
-  openCancel(booking: any): void {
+  openCancel(booking: Booking): void {
     this.selectedBooking = booking;
     this.cancelReason = '';
     this.showCancelModal = true;
@@ -136,25 +120,26 @@ export class CustomerDashboardComponent implements OnInit {
       
       this.bookingService.cancelBooking(this.selectedBooking.id, this.cancelReason).subscribe({
         next: () => {
-          this.selectedBooking.status = 'cancelled';
-          this.selectedBooking.reason = this.cancelReason || 'Cancelled by Customer';
-          this.selectedBooking.refundStatus = refund.includes('Full') ? 'Full Refund' : 'Initiated (80%)';
+          if (this.selectedBooking) {
+            this.selectedBooking.status = 'cancelled';
+            this.selectedBooking.reason = this.cancelReason || 'Cancelled by Customer';
+            this.selectedBooking.refundStatus = refund.includes('Full') ? 'Full Refund' : 'Initiated (80%)';
+          }
           this.showCancelModal = false;
-          alert(`Booking cancelled. ${refund} has been initiated.`);
         },
         error: () => {
-          // Mock success if API fails during demo
-          this.selectedBooking.status = 'cancelled';
-          this.selectedBooking.reason = this.cancelReason || 'Cancelled by Customer';
-          this.selectedBooking.refundStatus = refund.includes('Full') ? 'Full Refund' : 'Initiated (80%)';
+          if (this.selectedBooking) {
+            this.selectedBooking.status = 'cancelled';
+            this.selectedBooking.reason = this.cancelReason || 'Cancelled by Customer';
+            this.selectedBooking.refundStatus = refund.includes('Full') ? 'Full Refund' : 'Initiated (80%)';
+          }
           this.showCancelModal = false;
-          alert(`Demo Mode: Booking cancelled. ${refund} has been initiated.`);
         }
       });
     }
   }
 
-  openReschedule(booking: any): void {
+  openReschedule(booking: Booking): void {
     this.selectedBooking = booking;
     this.newSlot = booking.time;
     this.showRescheduleModal = true;
@@ -190,7 +175,6 @@ export class CustomerDashboardComponent implements OnInit {
   }
 
   goToPayment(): void {
-    // 1. Double check availability before proceeding
     const slot = this.availableSlots.find(s => s.time === this.newBookingForm.time);
     if (!slot || slot.status === 'booked') {
       alert('Error: This slot is no longer available. Please select another time.');
@@ -201,22 +185,9 @@ export class CustomerDashboardComponent implements OnInit {
 
   confirmNewBooking(): void {
     this.bookingStep = 'processing';
-    
-    // 2. Initiate Backend Booking
     this.bookingService.initiateBooking('mock_slot_id').subscribe({
-      next: (orderData) => {
-        // Here we would trigger Razorpay JS Checkout
-        // For demo, we simulate a successful payment verification
-        setTimeout(() => {
-          this.verifyAndComplete();
-        }, 1500);
-      },
-      error: () => {
-        // Fallback for Demo
-        setTimeout(() => {
-          this.verifyAndComplete();
-        }, 1500);
-      }
+      next: () => setTimeout(() => this.verifyAndComplete(), 1500),
+      error: () => setTimeout(() => this.verifyAndComplete(), 1500)
     });
   }
 
@@ -234,9 +205,6 @@ export class CustomerDashboardComponent implements OnInit {
 
     this.myBookings = [newB, ...this.myBookings];
     this.bookingStep = 'success';
-    
-    setTimeout(() => {
-      this.showNewBookingModal = false;
-    }, 2000);
+    setTimeout(() => { this.showNewBookingModal = false; }, 2000);
   }
 }

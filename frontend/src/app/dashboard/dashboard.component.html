@@ -21,10 +21,10 @@
 
     <div class="sidebar-footer">
       <div class="user-info">
-        <div class="avatar">{{ initials }}</div>
+        <div class="avatar">{{ user?.first_name?.charAt(0) }}</div>
         <div class="user-details">
           <div class="user-name">{{ user?.first_name }} {{ user?.last_name }}</div>
-          <div class="user-role">{{ user?.role === 'turf_owner' ? 'Turf Owner' : user?.role }}</div>
+          <div class="user-role">{{ user?.business_name }}</div>
         </div>
       </div>
       <button class="logout-btn" (click)="logout()" title="Logout">⏻</button>
@@ -40,10 +40,35 @@
         <h1 class="page-title">{{ pageTitle }}</h1>
         <span class="topbar-sub">Welcome back, {{ user?.first_name }}! 👋</span>
       </div>
-      <div class="topbar-right">
+      
+      <div class="topbar-right flex items-center gap-6">
         <div class="today-badge">
           📅 {{ today }}
         </div>
+
+        <!-- Notification Center -->
+        <div class="notifications-wrapper relative">
+          <button class="btn-icon" (click)="showNotifications = !showNotifications" [class.active]="showNotifications">
+            <span class="icon">🔔</span>
+            <span class="badge" *ngIf="notifications.length > 0">{{ notifications.length }}</span>
+          </button>
+          
+          <div class="notifications-dropdown glass-panel animate-fade-in" *ngIf="showNotifications">
+            <div class="dropdown-header flex justify-between items-center">
+              <h3>Notifications</h3>
+              <button class="text-xs text-muted" (click)="notifications = []">Clear All</button>
+            </div>
+            <div class="notifications-list">
+              <div class="notif-item" *ngFor="let n of notifications" [class]="n.type">
+                <div class="notif-text">{{ n.text }}</div>
+                <div class="notif-time">{{ n.time }}</div>
+              </div>
+              <div class="notif-empty" *ngIf="notifications.length === 0">No new notifications</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-sm" (click)="showBookingModal = true">+ New Booking</button>
       </div>
     </header>
 
@@ -76,55 +101,68 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let b of recentBookings.slice(0,4)">
-                <td class="font-bold">{{ b.time }}</td>
-                <td>{{ b.customer }}</td>
-                <td class="text-gradient font-bold">{{ b.amount }}</td>
+              <tr *ngFor="let b of recentBookings">
+                <td>{{ b.time }}</td>
+                <td>
+                  <div class="cell-primary">{{ b.customer }}</div>
+                  <div class="cell-sub">{{ b.phone }}</div>
+                </td>
+                <td class="font-bold text-gradient">{{ b.amount }}</td>
                 <td>
                   <span class="status-badge" [class]="b.status">{{ b.status }}</span>
+                  <div class="status-sub" *ngIf="b.status === 'cancelled'">{{ b.refundStatus }}</div>
                 </td>
                 <td>
-                  <div class="flex gap-2">
-                    <button class="btn-icon" (click)="openModifyBooking(b)" title="Modify">✏️</button>
-                    <button class="btn-icon danger" (click)="cancelBooking(b)" title="Cancel">🗑️</button>
+                  <div class="row-actions">
+                    <button class="btn-icon-sm" (click)="openCancel(b)" *ngIf="b.status !== 'cancelled'" title="Cancel Booking">✕</button>
+                    <button class="btn-icon-sm" title="Print Invoice">🖨️</button>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
+          <div class="panel-footer">
+            <button class="btn btn-text" (click)="activeMenu = 'bookings'">View All Bookings →</button>
+          </div>
         </div>
 
         <div class="glass-card panel">
           <div class="panel-header">
-            <h3>⚡ Quick Actions</h3>
+            <h3>👥 Top Customers</h3>
           </div>
-          <div class="quick-actions" style="padding: 24px; display: grid; gap: 12px;">
-            <button class="btn btn-primary" style="width: 100%" (click)="openManualBooking()">➕ Manual Booking</button>
-            <button class="btn btn-outline" style="width: 100%" (click)="setMenu('bookings')">📅 View Schedule</button>
-            <button class="btn btn-outline" style="width: 100%" (click)="setMenu('customers')">👥 Customer List</button>
+          <div class="customer-list">
+            <div class="customer-row" *ngFor="let c of customers">
+              <div class="avatar-sm">{{ c.name.charAt(0) }}</div>
+              <div class="customer-details">
+                <div class="name font-bold">{{ c.name }}</div>
+                <div class="sub">{{ c.totalBookings }} bookings</div>
+              </div>
+              <div class="last-seen">{{ c.lastBooking }}</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ── Bookings Section ────────────────────────────────────────── -->
+    <!-- ── Bookings Section ─────────────────────────────────────────── -->
     <div class="content animate-fade-in" *ngIf="activeMenu === 'bookings'">
-      <div class="glass-card full-panel">
-        <div class="panel-header">
-          <h3>📅 All Bookings</h3>
-          <div class="flex gap-4">
-            <input type="date" class="form-control" style="width: 200px;" [ngModel]="today">
-            <button class="btn btn-primary btn-sm" (click)="openManualBooking()">+ New</button>
+      <div class="glass-card panel">
+        <div class="panel-header flex justify-between">
+          <h2>All Bookings</h2>
+          <div class="filter-group flex gap-3">
+            <input type="text" placeholder="Search customer..." class="search-input">
+            <input type="date" class="date-input">
           </div>
         </div>
-        <table class="data-table">
+        
+        <table class="data-table mt-6">
           <thead>
             <tr>
               <th>ID</th>
               <th>Date</th>
-              <th>Time</th>
               <th>Customer</th>
               <th>Turf</th>
+              <th>Amount</th>
               <th>Status</th>
               <th>Refund</th>
               <th>Action</th>
@@ -132,314 +170,121 @@
           </thead>
           <tbody>
             <tr *ngFor="let b of recentBookings">
-              <td class="font-mono">{{ b.id }}</td>
+              <td>{{ b.id }}</td>
               <td>{{ b.date }}</td>
-              <td class="font-bold">{{ b.time }}</td>
               <td>{{ b.customer }}</td>
               <td>{{ b.turf }}</td>
-              <td>
-                <span class="status-badge" [class]="b.status">{{ b.status }}</span>
-                <div *ngIf="b.cancelReason" class="text-muted" style="font-size: 10px; margin-top: 4px;">Reason: {{ b.cancelReason }}</div>
-              </td>
-              <td>
-                <span *ngIf="b.refundStatus" class="status-badge confirmed" style="font-size: 10px;">{{ b.refundStatus }}</span>
-                <span *ngIf="!b.refundStatus && b.status === 'confirmed'" class="text-muted" style="font-size: 10px;">-</span>
-              </td>
-              <td>
-                <div class="flex gap-2">
-                  <button class="btn-icon" (click)="openModifyBooking(b)" title="Modify">✏️</button>
-                  <button class="btn-icon danger" (click)="cancelBooking(b)" title="Cancel" [disabled]="b.status === 'cancelled'">🗑️</button>
-                </div>
-              </td>
+              <td>{{ b.amount }}</td>
+              <td><span class="status-badge" [class]="b.status">{{ b.status }}</span></td>
+              <td><span class="text-xs text-muted">{{ b.refundStatus }}</span></td>
+              <td><button class="btn btn-outline btn-xs" (click)="openCancel(b)" *ngIf="b.status !== 'cancelled'">Cancel</button></td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- ── Slot Config Section ─────────────────────────────────────── -->
-    <div class="content animate-fade-in" *ngIf="activeMenu === 'slots'">
-      <div class="glass-card full-panel">
-        <div class="panel-header">
-          <h3>🕐 Slot Management</h3>
-          <p class="text-muted">Define your arena's availability and pricing.</p>
-        </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Time Slot</th>
-              <th>Base Price (Weekdays)</th>
-              <th>Weekend Price</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let s of slots">
-              <td class="font-bold">{{ s.time }}</td>
-              <td><input type="text" [(ngModel)]="s.basePrice" class="form-control btn-sm" style="width: 100px; padding: 6px;"></td>
-              <td><input type="text" [(ngModel)]="s.weekendPrice" class="form-control btn-sm" style="width: 100px; padding: 6px;"></td>
-              <td>
-                <span class="status-badge" [class.confirmed]="s.isActive" [class.cancelled]="!s.isActive">
-                  {{ s.isActive ? 'Active' : 'Disabled' }}
-                </span>
-              </td>
-              <td>
-                <button class="btn btn-outline btn-sm" (click)="s.isActive = !s.isActive">
-                  {{ s.isActive ? 'Disable' : 'Enable' }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <div class="mt-6 flex justify-between items-center" style="padding: 24px; background: rgba(255,255,255,0.02); border-radius: 12px;">
-          <p class="text-muted">Changes are saved automatically to your profile.</p>
-          <button class="btn btn-primary" (click)="saveSettings()">Apply Global Changes</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Payments Section ────────────────────────────────────────── -->
-    <div class="content animate-fade-in" *ngIf="activeMenu === 'payments'">
-      <div class="glass-card full-panel">
-        <div class="panel-header">
-          <h3>💰 Payment Transactions</h3>
-          <div class="stats-mini">
-            <span>Total: ₹45,200</span>
-          </div>
-        </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Transaction ID</th>
-              <th>Date</th>
-              <th>Customer</th>
-              <th>Amount</th>
-              <th>Method</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let p of payments">
-              <td class="font-mono">{{ p.id }}</td>
-              <td>{{ p.date }}</td>
-              <td>{{ p.customer }}</td>
-              <td class="font-bold">{{ p.amount }}</td>
-              <td>{{ p.method }}</td>
-              <td><span class="status-badge" [class.confirmed]="p.status === 'success'" [class.cancelled]="p.status === 'failed'">{{ p.status }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── Customers Section ───────────────────────────────────────── -->
-    <div class="content animate-fade-in" *ngIf="activeMenu === 'customers'">
-      <div class="glass-card full-panel">
-        <div class="panel-header">
-          <h3>👥 Your Customers</h3>
-        </div>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Total Bookings</th>
-              <th>Last Booking</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let c of customers">
-              <td class="font-bold">{{ c.name }}</td>
-              <td>{{ c.email }}</td>
-              <td>{{ c.phone }}</td>
-              <td class="text-center">{{ c.totalBookings }}</td>
-              <td>{{ c.lastBooking }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── Settings Section ────────────────────────────────────────── -->
+    <!-- ── Settings Section ─────────────────────────────────────────── -->
     <div class="content animate-fade-in" *ngIf="activeMenu === 'settings'">
-      <div class="settings-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
-        <div class="glass-card panel">
-          <div class="panel-header">
-            <h3>⚙️ General Settings</h3>
-          </div>
-          <form (ngSubmit)="saveSettings()" class="settings-form" style="padding: 24px; display: grid; gap: 16px;">
-            <div class="form-group">
-              <label>Business Name</label>
-              <input type="text" [(ngModel)]="settingsForm.businessName" name="bname" class="form-control">
-            </div>
-            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label>Contact Phone</label>
-                <input type="text" [(ngModel)]="settingsForm.phone" name="phone" class="form-control">
-              </div>
-              <div class="form-group">
-                <label>Contact Email</label>
-                <input type="email" [(ngModel)]="settingsForm.email" name="email" class="form-control">
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Address</label>
-              <textarea [(ngModel)]="settingsForm.address" name="addr" class="form-control" rows="3"></textarea>
-            </div>
-            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <div class="form-group">
-                <label>Opening Time</label>
-                <input type="time" [(ngModel)]="settingsForm.openTime" name="open" class="form-control">
-              </div>
-              <div class="form-group">
-                <label>Closing Time</label>
-                <input type="time" [(ngModel)]="settingsForm.closeTime" name="close" class="form-control">
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Save Business Profile</button>
-          </form>
-        </div>
+      <div class="glass-card panel" style="max-width: 600px;">
+        <h2>Arena Settings</h2>
+        <p class="text-muted mb-8">Manage your business profile and preferences</p>
 
-        <div class="glass-card panel">
-          <div class="panel-header">
-            <h3>🎨 Branding & UI</h3>
+        <div class="settings-form grid gap-6">
+          <div class="form-group">
+            <label>Business Name</label>
+            <input type="text" [value]="user?.business_name" class="form-control">
           </div>
-          <div style="padding: 24px; display: grid; gap: 20px;">
-            <div class="form-group">
-              <label>Primary Brand Color</label>
-              <div class="color-picker-row" style="display: flex; align-items: center; gap: 12px;">
-                <input type="color" [(ngModel)]="settingsForm.primaryColor" class="color-input">
-                <span>{{ settingsForm.primaryColor }}</span>
-              </div>
-            </div>
-            <div class="branding-preview" [style.background-color]="settingsForm.primaryColor + '10'" [style.border-color]="settingsForm.primaryColor + '30'" style="padding: 20px; border-radius: 12px; border: 1px solid; display: flex; align-items: center; gap: 12px;">
-              <div class="preview-dot" [style.background-color]="settingsForm.primaryColor" style="width: 12px; height: 12px; border-radius: 50%;"></div>
-              <span [style.color]="settingsForm.primaryColor" style="font-weight: 700;">Brand Color Preview</span>
-            </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" [value]="user?.email" class="form-control" disabled>
           </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" [value]="user?.phone" class="form-control">
+          </div>
+          <button class="btn btn-primary mt-4">Save Changes</button>
         </div>
       </div>
     </div>
-
-    <!-- Dashboard Footer -->
-    <footer class="dashboard-footer">
-      <div class="footer-links">
-        <a href="javascript:void(0)" (click)="openTerms()">Terms & Conditions</a>
-        <a href="javascript:void(0)" (click)="openContact()">Contact Us</a>
-      </div>
-      <div class="footer-copyright">
-        © 2026 TurfBook Arena Cloud. All rights reserved.
-      </div>
-    </footer>
 
   </main>
-</div>
 
-<!-- ── Modals ───────────────────────────────────────────────────────── -->
-<div class="modal-overlay" *ngIf="showBookingModal" (click)="showBookingModal = false">
-  <div class="modal-box glass-panel" (click)="$event.stopPropagation()">
-    <div class="panel-header">
-      <h3>➕ Create Manual Booking</h3>
-    </div>
-    <form (ngSubmit)="submitManualBooking()" class="booking-form" style="padding: 24px; display: grid; gap: 16px;">
-      <div class="form-group">
-        <label>Customer Name</label>
-        <input type="text" [(ngModel)]="bookingForm.customerName" name="cname" class="form-control" placeholder="e.g. John Doe" required>
+  <!-- Modals -->
+  <!-- ── New Booking Modal ── -->
+  <div class="modal-overlay" *ngIf="showBookingModal" (click)="showBookingModal = false">
+    <div class="modal-box glass-panel animate-slide-up" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Manual Booking</h2>
+        <p class="text-muted">Create a direct booking for your arena</p>
       </div>
-      <div class="form-group">
-        <label>Customer Phone</label>
-        <input type="text" [(ngModel)]="bookingForm.customerPhone" name="cphone" class="form-control" placeholder="e.g. 9876543210">
-      </div>
-      <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+
+      <div class="modal-form grid gap-4 mt-6">
         <div class="form-group">
-          <label>Slot Time</label>
-          <input type="text" [(ngModel)]="bookingForm.slotTime" name="stime" class="form-control" placeholder="e.g. 06:00 PM" required>
+          <label>Customer Name</label>
+          <input type="text" [(ngModel)]="bookingForm.customer" placeholder="Full name" class="form-control">
         </div>
         <div class="form-group">
-          <label>Amount (₹)</label>
-          <input type="text" [(ngModel)]="bookingForm.amount" name="amt" class="form-control" placeholder="800">
+          <label>Phone Number</label>
+          <input type="text" [(ngModel)]="bookingForm.phone" placeholder="98765 43210" class="form-control">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" [(ngModel)]="bookingForm.date" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Time</label>
+            <input type="time" [(ngModel)]="bookingForm.time" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Select Turf</label>
+          <select [(ngModel)]="bookingForm.turf" class="form-control">
+            <option>Main Cricket Pitch</option>
+            <option>Football Cage A</option>
+            <option>Badminton Court 1</option>
+          </select>
         </div>
       </div>
-      <div class="modal-actions mt-4 flex gap-4">
-        <button type="button" class="btn btn-outline flex-1" (click)="showBookingModal = false">Cancel</button>
-        <button type="submit" class="btn btn-primary flex-1">Confirm Booking</button>
-      </div>
-    </form>
-  </div>
-</div>
 
-<div class="modal-overlay" *ngIf="showModifyModal" (click)="showModifyModal = false">
-  <div class="modal-box glass-panel" (click)="$event.stopPropagation()">
-    <div class="panel-header">
-      <h3>✏️ Modify Booking: {{ selectedBooking?.id }}</h3>
+      <div class="modal-actions mt-8 flex gap-4">
+        <button class="btn btn-outline flex-1" (click)="showBookingModal = false">Discard</button>
+        <button class="btn btn-primary flex-1" (click)="submitBooking()">Confirm Booking</button>
+      </div>
     </div>
-    <form (ngSubmit)="submitModifyBooking()" class="booking-form" style="padding: 24px; display: grid; gap: 16px;">
-      <div class="form-group">
-        <label>Customer Name</label>
-        <input type="text" [(ngModel)]="modifyForm.customerName" name="mcname" class="form-control">
-      </div>
-      <div class="form-group">
-        <label>Change Date</label>
-        <input type="date" [(ngModel)]="modifyForm.date" name="mdate" class="form-control">
-      </div>
-      <div class="form-group">
-        <label>New Slot Time</label>
-        <select [(ngModel)]="modifyForm.slotTime" name="mstime" class="form-control">
-          <option *ngFor="let s of slots" [value]="s.time">{{ s.time }}</option>
-        </select>
-      </div>
-      <div class="modal-actions mt-4 flex gap-4">
-        <button type="button" class="btn btn-outline flex-1" (click)="showModifyModal = false">Cancel</button>
-        <button type="button" class="btn btn-outline danger-text flex-1" (click)="showModifyModal = false; cancelBooking(selectedBooking)">Cancel Booking</button>
-        <button type="submit" class="btn btn-primary flex-1">Update Booking</button>
-      </div>
-    </form>
   </div>
-</div>
 
-<div class="modal-overlay" *ngIf="showCancelModal" (click)="showCancelModal = false">
-  <div class="modal-box glass-panel" (click)="$event.stopPropagation()">
-    <div class="panel-header">
-      <h3>🗑️ Cancel Booking: {{ selectedBooking?.id }}</h3>
-    </div>
-    <form (ngSubmit)="submitCancelBooking()" class="booking-form" style="padding: 24px;">
-      <p class="text-muted mb-4">Are you sure you want to cancel the booking for <strong>{{ selectedBooking?.customer }}</strong>?</p>
-      <div class="form-group">
-        <label>Reason for Cancellation</label>
-        <textarea [(ngModel)]="cancelForm.reason" name="creason" class="form-control" rows="3" placeholder="e.g. Customer requested cancellation"></textarea>
+  <!-- ── Cancellation Modal ── -->
+  <div class="modal-overlay" *ngIf="showCancelModal" (click)="showCancelModal = false">
+    <div class="modal-box glass-panel animate-slide-up" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="danger-text">Cancel Booking</h2>
+        <p class="text-muted">Booking Reference: {{ selectedBooking?.id }}</p>
       </div>
-      <div class="modal-actions mt-4 flex gap-4">
-        <button type="button" class="btn btn-outline flex-1" (click)="showCancelModal = false">No, Keep Booking</button>
-        <button type="submit" class="btn btn-primary flex-1 danger-btn">Yes, Cancel Booking</button>
+
+      <div class="warning-box mt-4 p-4 rounded-xl border border-yellow-500/20 bg-yellow-500/5">
+        <div class="font-bold text-yellow-500 flex items-center gap-2">
+          <span>⚠️</span> Attention
+        </div>
+        <p class="text-xs text-muted mt-1">Cancelling this booking will trigger an automated refund process based on the 30-minute rule.</p>
       </div>
-    </form>
-  </div>
-</div>
 
-<div class="modal-overlay" *ngIf="showContactModal" (click)="showContactModal = false">
-  <div class="modal-box animate-fade-in" (click)="$event.stopPropagation()">
-    <button class="modal-close" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8;" (click)="showContactModal = false">✕</button>
-    <h2 class="mb-6">Contact Support</h2>
-    <div class="contact-details" style="color: var(--text-muted); line-height: 2;">
-      <p>📧 Email: support&#64;turfbook.com</p>
-      <p>📞 Phone: +91 98765 43210</p>
-      <p>💬 WhatsApp: +91 98765 43210</p>
-    </div>
-    <button class="btn btn-primary mt-8" style="width: 100%" (click)="showContactModal = false">Close</button>
-  </div>
-</div>
+      <div class="form-group mt-6">
+        <label>Cancellation Reason</label>
+        <textarea 
+          [(ngModel)]="cancelForm.reason" 
+          rows="3" 
+          class="form-control" 
+          placeholder="e.g. Inclement weather, maintenance, etc.">
+        </textarea>
+      </div>
 
-<div class="modal-overlay" *ngIf="showTermsModal" (click)="showTermsModal = false">
-  <div class="modal-box animate-fade-in" style="max-width: 600px; max-height: 70vh; overflow-y: auto;" (click)="$event.stopPropagation()">
-    <button class="modal-close" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 20px; cursor: pointer; color: #94a3b8;" (click)="showTermsModal = false">✕</button>
-    <h2 class="mb-4">Terms of Use</h2>
-    <div class="terms-text" style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">
-      <p>By using TurfBook, you agree to follow our arena management guidelines...</p>
-      <p class="mt-4"><strong>Booking Policy:</strong> All bookings must be honored. Cancellation window is 30 mins.</p>
-      <p class="mt-4"><strong>Data Safety:</strong> Your business data is encrypted and secure.</p>
+      <div class="modal-actions mt-8 flex gap-4">
+        <button class="btn btn-outline flex-1" (click)="showCancelModal = false">Keep Booking</button>
+        <button class="btn btn-primary danger-btn flex-1" (click)="submitCancelBooking()">Cancel Booking Now</button>
+      </div>
     </div>
-    <button class="btn btn-primary mt-8" style="width: 100%" (click)="showTermsModal = false">I Understand</button>
   </div>
+
 </div>
