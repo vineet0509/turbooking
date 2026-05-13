@@ -1,16 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
-
-export interface User {
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone: string;
-  role: 'super_admin' | 'turf_owner' | 'customer';
-  date_joined: string;
-}
+import { User } from '../models/booking.model';
 
 export interface AuthTokens {
   access: string;
@@ -32,17 +23,25 @@ export interface LoginPayload {
   password: string;
 }
 
-const API_BASE = 'http://localhost:8000/api/auth';
-const TOKEN_KEY = 'tb_access';
-const REFRESH_KEY = 'tb_refresh';
-const USER_KEY = 'tb_user';
+const API_BASE = 'http://localhost:8000/api/accounts';
+const TOKEN_KEY = 'turf_access';
+const REFRESH_KEY = 'turf_refresh';
+const USER_KEY = 'turf_user';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<User | null>(this.loadUser());
-  currentUser$ = this.currentUserSubject.asObservable();
+  private currentUserSubject: BehaviorSubject<User | null>;
+  public currentUser$: Observable<User | null>;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    const savedUser = localStorage.getItem(USER_KEY);
+    this.currentUserSubject = new BehaviorSubject<User | null>(
+      savedUser ? JSON.parse(savedUser) : null
+    );
+    this.currentUser$ = this.currentUserSubject.asObservable();
+  }
 
   // ── Getters ───────────────────────────────────────────────────────────────
 
@@ -108,21 +107,12 @@ export class AuthService {
     this.currentUserSubject.next(null);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  // ── Private Helpers ────────────────────────────────────────────────────────
 
   private saveSession(res: AuthTokens): void {
     localStorage.setItem(TOKEN_KEY, res.access);
     localStorage.setItem(REFRESH_KEY, res.refresh);
     localStorage.setItem(USER_KEY, JSON.stringify(res.user));
     this.currentUserSubject.next(res.user);
-  }
-
-  private loadUser(): User | null {
-    try {
-      const raw = localStorage.getItem(USER_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
   }
 }

@@ -7,8 +7,8 @@ export interface Booking {
   amount: string;
   status: string;
   phone?: string;
-  reason?: string;       // Used for Customer Dashboard display
-  cancelReason?: string; // Used for Owner Dashboard display
+  reason?: string;
+  cancelReason?: string;
   refundStatus?: string;
 }
 
@@ -17,8 +17,9 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  full_name: string;
+  full_name?: string; // Made optional for compatibility
   phone: string;
-  role: 'turf_owner' | 'customer';
+  role: 'super_admin' | 'turf_owner' | 'customer';
   business_name?: string;
+  date_joined?: string;
 }
