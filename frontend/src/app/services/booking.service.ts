@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { Booking } from '../customer-dashboard/customer-dashboard.component';
+import { Observable } from 'rxjs';
+import { Booking } from '../models/booking.model';
 import { AuthService } from './auth.service';
 
 const API_BASE = 'http://localhost:8000/api/bookings';
