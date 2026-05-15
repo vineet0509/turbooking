@@ -184,26 +184,206 @@
       </div>
     </div>
 
-    <!-- ── Settings Section ─────────────────────────────────────────── -->
-    <div class="content animate-fade-in" *ngIf="activeMenu === 'settings'">
-      <div class="glass-card panel" style="max-width: 600px;">
-        <h2>Arena Settings</h2>
-        <p class="text-muted mb-8">Manage your business profile and preferences</p>
+    <!-- ── Turfs Section ────────────────────────────────────────────── -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'turfs'">
+      <div class="glass-card panel">
+        <div class="panel-header flex justify-between">
+          <div>
+            <h2>Manage Turfs</h2>
+            <p class="text-muted" *ngIf="mySubscription">
+              Plan: <strong>{{ mySubscription.plan }}</strong> 
+              ({{ myTurfs.length }} / {{ mySubscription.max_turfs }} turfs used)
+            </p>
+          </div>
+          <button class="btn btn-primary" (click)="openTurfModal()">+ Add New Turf</button>
+        </div>
 
-        <div class="settings-form grid gap-6">
-          <div class="form-group">
-            <label>Business Name</label>
-            <input type="text" [value]="user?.business_name" class="form-control">
+        <div class="turfs-grid mt-6">
+          <div class="turf-card glass-panel" *ngFor="let t of myTurfs">
+            <div class="turf-header">
+              <h3>{{ t.name }}</h3>
+              <span class="status-badge" [class.active]="t.is_active">
+                {{ t.is_active ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+            <div class="turf-details">
+              <div class="detail-item"><span>⚽</span> {{ t.turf_type | titlecase }}</div>
+              <div class="detail-item"><span>📏</span> {{ t.capacity }} Players</div>
+              <div class="detail-item"><span>💰</span> ₹{{ t.price_per_hour }}/hr</div>
+            </div>
+            <div class="turf-actions mt-4 flex gap-2">
+              <button class="btn btn-outline btn-sm flex-1" (click)="openTurfModal(t)">Edit</button>
+              <button class="btn btn-text danger-text btn-sm" (click)="deleteTurf(t.id!)">Delete</button>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" [value]="user?.email" class="form-control" disabled>
+          
+          <div class="turf-empty-state" *ngIf="myTurfs.length === 0">
+            <p>No turfs added yet. Start by adding your first turf ground!</p>
           </div>
-          <div class="form-group">
-            <label>Phone Number</label>
-            <input type="text" [value]="user?.phone" class="form-control">
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Plans Section ────────────────────────────────────────────── -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'plans'">
+      <div class="plans-container">
+        <div class="plans-header text-center mb-10">
+          <h2 class="text-3xl font-bold">Choose Your Plan</h2>
+          <p class="text-muted">Scale your business with the right features</p>
+          
+          <div class="current-plan-badge glass-panel inline-block mt-4 px-6 py-2" *ngIf="mySubscription">
+            Current Plan: <strong class="text-gradient">{{ mySubscription.plan }}</strong> 
+            (Expires: {{ mySubscription.end_date }})
           </div>
-          <button class="btn btn-primary mt-4">Save Changes</button>
+        </div>
+
+        <div class="plans-grid">
+          <div class="plan-card glass-panel" *ngFor="let p of plans" [class.recommended]="p.name === 'pro'">
+            <div class="recommended-ribbon" *ngIf="p.name === 'pro'">Popular</div>
+            <div class="plan-info">
+              <h3>{{ p.display_name }}</h3>
+              <div class="plan-price">
+                <span class="currency">₹</span>
+                <span class="amount">{{ p.price_monthly }}</span>
+                <span class="period">/month</span>
+              </div>
+            </div>
+            
+            <ul class="plan-features mt-6">
+              <li>✅ Up to <strong>{{ p.max_turfs }}</strong> Turfs</li>
+              <li>✅ {{ p.max_bookings_per_month === -1 ? 'Unlimited' : p.max_bookings_per_month }} Bookings/mo</li>
+              <li *ngFor="let f of p.features">✅ {{ f }}</li>
+            </ul>
+
+            <button 
+              class="btn mt-8 w-full" 
+              [class.btn-primary]="p.display_name !== mySubscription?.plan"
+              [class.btn-outline]="p.display_name === mySubscription?.plan"
+              [disabled]="p.display_name === mySubscription?.plan"
+              (click)="selectPlan(p.id)"
+            >
+              {{ p.display_name === mySubscription?.plan ? 'Active Plan' : 'Select Plan' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Customers Section ────────────────────────────────────────── -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'customers'">
+      <div class="glass-card panel">
+        <div class="panel-header flex justify-between items-center">
+          <h2>Registered Players</h2>
+          <input type="text" placeholder="Search players..." class="search-input">
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Player Name</th>
+              <th>Contact Info</th>
+              <th>Total Bookings</th>
+              <th>Last Booking</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of customers">
+              <td>
+                <div class="flex items-center gap-3">
+                  <div class="avatar-sm">{{ c.name.charAt(0) }}</div>
+                  <strong>{{ c.name }}</strong>
+                </div>
+              </td>
+              <td>
+                <div class="cell-primary">{{ c.email }}</div>
+                <div class="cell-sub">{{ c.phone }}</div>
+              </td>
+              <td><span class="badge">{{ c.totalBookings }} matches</span></td>
+              <td>{{ c.lastBooking }}</td>
+              <td>
+                <button class="btn btn-text btn-sm">View History</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Payments Section ─────────────────────────────────────────── -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'payments'">
+      <div class="glass-card panel">
+        <div class="panel-header">
+          <h2>Transaction History</h2>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Transaction ID</th>
+              <th>Date & Time</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of payments">
+              <td><code class="text-xs">{{ p.id }}</code></td>
+              <td>{{ p.date }}</td>
+              <td>{{ p.customer }}</td>
+              <td><strong class="text-gradient">{{ p.amount }}</strong></td>
+              <td><span class="badge">{{ p.method }}</span></td>
+              <td><span class="status-badge" [class]="p.status">{{ p.status }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Arena Settings Section ───────────────────────────────────── -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'settings'">
+      <div class="glass-card panel" *ngIf="tenant">
+        <div class="panel-header">
+          <h2>Arena Profile Settings</h2>
+          <button class="btn btn-primary btn-sm" (click)="saveProfile()">Save Changes</button>
+        </div>
+        <div class="p-8 grid grid-cols-2 gap-8">
+          <div class="grid gap-6">
+            <div class="form-group">
+              <label>Arena Display Name</label>
+              <input type="text" [(ngModel)]="tenant.name" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Business Email</label>
+              <input type="email" [(ngModel)]="tenant.email" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Contact Phone</label>
+              <input type="text" [(ngModel)]="tenant.phone" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Tagline</label>
+              <input type="text" [(ngModel)]="tenant.tagline" class="form-control" placeholder="e.g. Best turf in the city">
+            </div>
+          </div>
+          <div class="grid gap-6">
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" [(ngModel)]="tenant.city" class="form-control">
+            </div>
+            <div class="form-group">
+              <label>Complete Address</label>
+              <textarea [(ngModel)]="tenant.address" rows="3" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+              <label>Google Maps URL</label>
+              <input type="text" [(ngModel)]="tenant.google_maps_url" class="form-control">
+            </div>
+          </div>
+          <div class="col-span-2 form-group">
+            <label>About Your Arena</label>
+            <textarea [(ngModel)]="tenant.description" rows="4" class="form-control"></textarea>
+          </div>
         </div>
       </div>
     </div>
@@ -241,9 +421,7 @@
         <div class="form-group">
           <label>Select Turf</label>
           <select [(ngModel)]="bookingForm.turf" class="form-control">
-            <option>Main Cricket Pitch</option>
-            <option>Football Cage A</option>
-            <option>Badminton Court 1</option>
+            <option *ngFor="let t of myTurfs" [value]="t.name">{{ t.name }}</option>
           </select>
         </div>
       </div>
@@ -283,6 +461,65 @@
       <div class="modal-actions mt-8 flex gap-4">
         <button class="btn btn-outline flex-1" (click)="showCancelModal = false">Keep Booking</button>
         <button class="btn btn-primary danger-btn flex-1" (click)="submitCancelBooking()">Cancel Booking Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Turf Modal ── -->
+  <div class="modal-overlay" *ngIf="showTurfModal" (click)="showTurfModal = false">
+    <div class="modal-box glass-panel animate-slide-up" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>{{ turfForm.id ? 'Edit Turf' : 'Add New Turf' }}</h2>
+        <p class="text-muted">Define the details of your turf ground</p>
+      </div>
+
+      <div class="modal-form grid gap-4 mt-6">
+        <div class="form-group">
+          <label>Turf Name</label>
+          <input type="text" [(ngModel)]="turfForm.name" placeholder="e.g. Main Cricket Pitch" class="form-control">
+        </div>
+        
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label>Sport Type</label>
+            <select [(ngModel)]="turfForm.turf_type" class="form-control">
+              <option value="cricket">Cricket</option>
+              <option value="football">Football</option>
+              <option value="badminton">Badminton</option>
+              <option value="multi">Multi-Sport</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Player Capacity</label>
+            <input type="number" [(ngModel)]="turfForm.capacity" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Pitch Type</label>
+          <input type="text" [(ngModel)]="turfForm.pitch_type" placeholder="e.g. Astro Turf, Clay" class="form-control">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div class="form-group">
+            <label>Weekday Price/hr (₹)</label>
+            <input type="number" [(ngModel)]="turfForm.price_per_hour" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Weekend Price/hr (₹)</label>
+            <input type="number" [(ngModel)]="turfForm.weekend_price_per_hour" class="form-control">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea [(ngModel)]="turfForm.description" rows="2" class="form-control"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions mt-8 flex gap-4">
+        <button class="btn btn-outline flex-1" (click)="showTurfModal = false">Cancel</button>
+        <button class="btn btn-primary flex-1" (click)="saveTurf()">{{ turfForm.id ? 'Update Turf' : 'Create Turf' }}</button>
       </div>
     </div>
   </div>

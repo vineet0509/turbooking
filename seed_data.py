@@ -19,9 +19,9 @@ if not User.objects.filter(email='admin@turfbook.com').exists():
         first_name='Super',
         last_name='Admin',
     )
-    print('✅ Super Admin created: admin@turfbook.com / Admin@123')
+    print('OK: Super Admin created: admin@turfbook.com / Admin@123')
 else:
-    print('ℹ️  Super Admin already exists')
+    print('[INFO] Super Admin already exists')
 
 # Create Subscription Plans
 plans = [
@@ -87,8 +87,8 @@ for plan_data in plans:
         defaults=plan_data
     )
     status = 'created' if created else 'updated'
-    print(f'✅ Plan "{plan.display_name}" {status} — ₹{plan.price_monthly}/mo | ₹{plan.price_yearly}/yr')
+    print(f'OK: Plan "{plan.display_name}" {status} — Rs.{plan.price_monthly}/mo | Rs.{plan.price_yearly}/yr')
 
-print('\n🎉 Seed data loaded successfully!')
-print('🔗 Backend: http://localhost:8000')
-print('📋 API docs: Check turf_saas_plan.md for all endpoints')
+print('\nSeed data loaded successfully!')
+print('Backend: http://localhost:8000')
+print('API docs: Check turf_saas_plan.md for all endpoints')

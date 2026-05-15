@@ -23,7 +23,7 @@ export interface LoginPayload {
   password: string;
 }
 
-const API_BASE = 'http://localhost:8000/api/accounts';
+const API_BASE = 'http://localhost:8000/api/auth';
 const TOKEN_KEY = 'turf_access';
 const REFRESH_KEY = 'turf_refresh';
 const USER_KEY = 'turf_user';

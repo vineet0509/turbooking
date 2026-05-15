@@ -9,10 +9,10 @@
     <div class="admin-badge">Super Admin</div>
 
     <nav class="sidebar-nav">
-      <div class="nav-item active">📊 Platform Overview</div>
-      <div class="nav-item">🏟️ Manage Arenas</div>
-      <div class="nav-item">📈 Revenue Analytics</div>
-      <div class="nav-item">⚙️ Global Settings</div>
+      <div class="nav-item" [class.active]="activeMenu === 'overview'" (click)="setMenu('overview')">📊 Platform Overview</div>
+      <div class="nav-item" [class.active]="activeMenu === 'arenas'" (click)="setMenu('arenas')">🏟️ Manage Arenas</div>
+      <div class="nav-item" [class.active]="activeMenu === 'revenue'" (click)="setMenu('revenue')">📈 Revenue Analytics</div>
+      <div class="nav-item" [class.active]="activeMenu === 'settings'" (click)="setMenu('settings')">⚙️ Global Settings</div>
     </nav>
 
     <div class="sidebar-footer mt-auto p-6">
@@ -42,13 +42,14 @@
       </div>
     </div>
 
-    <div class="dashboard-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <!-- Overview Menu -->
+    <div class="dashboard-grid animate-fade-in" *ngIf="activeMenu === 'overview'" style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
       
-      <!-- Pending Approvals -->
+      <!-- Recent Registrations -->
       <div class="glass-panel">
         <div class="flex justify-between items-center mb-6">
-          <h2 style="font-size: 20px;">⏳ Pending Arena Approvals</h2>
-          <span class="text-gold" style="font-size: 13px;">View All →</span>
+          <h2 style="font-size: 20px;">🏟️ Recent Arena Registrations</h2>
+          <span class="text-gold" style="font-size: 13px; cursor: pointer;" (click)="setMenu('arenas')">View All →</span>
         </div>
 
         <table class="data-table">
@@ -56,43 +57,94 @@
             <tr>
               <th>Arena Name</th>
               <th>Owner</th>
-              <th>Date</th>
+              <th>Plan</th>
+              <th>Turfs</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let a of pendingArenas">
+            <tr *ngFor="let a of arenas | slice:0:5">
               <td><strong>{{ a.name }}</strong></td>
-              <td>{{ a.owner }}</td>
-              <td>{{ a.date }}</td>
+              <td>{{ a.owner_name }}</td>
+              <td><span class="text-gold">{{ a.plan }}</span></td>
+              <td>{{ a.turf_count }}</td>
               <td><span class="status-tag" [class]="a.status">{{ a.status }}</span></td>
               <td>
                 <div *ngIf="a.status === 'pending'">
-                  <button class="btn-approve" (click)="approveArena(a)">Approve</button>
-                  <button class="btn-reject" (click)="rejectArena(a)">Reject</button>
+                  <button class="btn-approve" (click)="approveArena(a.id)">Approve</button>
+                  <button class="btn-reject" (click)="rejectArena(a.id)">Reject</button>
                 </div>
-                <div *ngIf="a.status !== 'pending'" class="text-muted text-xs">Actioned</div>
+                <div *ngIf="a.status === 'approved'">
+                  <button class="btn-reject" (click)="suspendArena(a.id)">Suspend</button>
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Subscription Breakdown -->
+      <!-- Subscription Snapshot -->
       <div class="glass-panel">
-        <h2 style="font-size: 20px; margin-bottom: 24px;">💎 Subscription Revenue</h2>
+        <h2 style="font-size: 20px; margin-bottom: 24px;">💎 Business Snapshot</h2>
         <div class="sub-list" style="display: grid; gap: 20px;">
-          <div *ngFor="let sub of subscriptions" style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; border-left: 4px solid #FFD700;">
+          <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; border-left: 4px solid #FFD700;">
             <div class="flex justify-between mb-2">
-              <span style="font-weight: 800;">{{ sub.plan }}</span>
-              <span class="text-gold">{{ sub.revenue }}</span>
+              <span style="font-weight: 800;">Pending Approvals</span>
+              <span class="text-gold">{{ platformStats?.tenants.pending }}</span>
             </div>
-            <div style="font-size: 13px; color: #94a3b8;">{{ sub.count }} Active Tenants</div>
+            <div style="font-size: 13px; color: #94a3b8;">Arenas awaiting verification</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; border-left: 4px solid #10B981;">
+            <div class="flex justify-between mb-2">
+              <span style="font-weight: 800;">Active Bookings</span>
+              <span class="text-green-400">{{ platformStats?.bookings.confirmed }}</span>
+            </div>
+            <div style="font-size: 13px; color: #94a3b8;">Total successful reservations</div>
           </div>
         </div>
       </div>
-
     </div>
+
+    <!-- Arenas Menu -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'arenas'">
+      <div class="glass-panel">
+        <h2 style="font-size: 24px; margin-bottom: 20px;">Manage All Arenas</h2>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Arena Name</th>
+              <th>Subdomain</th>
+              <th>Owner</th>
+              <th>Plan</th>
+              <th>Turfs</th>
+              <th>City</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of arenas">
+              <td style="font-size: 10px; color: #94a3b8;">{{ a.id.substring(0,8) }}</td>
+              <td><strong>{{ a.name }}</strong></td>
+              <td><code class="text-gold">{{ a.subdomain }}</code></td>
+              <td>{{ a.owner_name }}</td>
+              <td><span class="text-gold font-bold">{{ a.plan }}</span></td>
+              <td><span class="badge">{{ a.turf_count }} turfs</span></td>
+              <td>{{ a.city }}</td>
+              <td><span class="status-tag" [class]="a.status">{{ a.status }}</span></td>
+              <td>
+                <div class="flex gap-2">
+                  <button class="btn-approve btn-xs" (click)="approveArena(a.id)" *ngIf="a.status !== 'approved'">Approve</button>
+                  <button class="btn-reject btn-xs" (click)="suspendArena(a.id)" *ngIf="a.status === 'approved'">Suspend</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>

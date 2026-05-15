@@ -124,7 +124,7 @@ class BookingListView(APIView):
     def get(self, request):
         user = request.user
         if user.role == 'turf_owner':
-            bookings = Booking.objects.filter(tenant=user.owned_tenant).select_related('slot', 'customer')
+            bookings = Booking.objects.filter(tenant=user.owned_tenant).select_related('slot', 'turf', 'customer')
         else:
             bookings = Booking.objects.filter(customer=user).select_related('slot', 'turf')
 
@@ -132,6 +132,9 @@ class BookingListView(APIView):
             'id': str(b.id),
             'booking_ref': b.booking_ref,
             'turf': b.turf.name,
+            'customer': b.customer_name,
+            'email': b.customer_email,
+            'phone': b.customer_phone,
             'date': str(b.slot.date),
             'start_time': str(b.slot.start_time),
             'end_time': str(b.slot.end_time),
@@ -139,6 +142,57 @@ class BookingListView(APIView):
             'status': b.status,
             'created_at': b.created_at,
         } for b in bookings]
+        return Response(data)
+
+
+class CustomerListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'turf_owner':
+            return Response({'error': 'Unauthorized'}, status=403)
+        
+        tenant = request.user.owned_tenant
+        from django.db.models import Count, Max
+        
+        customers = Booking.objects.filter(tenant=tenant).values(
+            'customer_email', 'customer_name', 'customer_phone'
+        ).annotate(
+            totalBookings=Count('id'),
+            lastBooking=Max('slot__date')
+        ).order_by('-lastBooking')
+
+        data = [{
+            'name': c['customer_name'],
+            'email': c['customer_email'],
+            'phone': c['customer_phone'],
+            'totalBookings': c['totalBookings'],
+            'lastBooking': str(c['lastBooking']),
+        } for c in customers]
+        
+        return Response(data)
+
+
+class PaymentListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'turf_owner':
+            return Response({'error': 'Unauthorized'}, status=403)
+            
+        tenant = request.user.owned_tenant
+        payments = Payment.objects.filter(booking__tenant=tenant).select_related('booking')
+        
+        data = [{
+            'id': str(p.id),
+            'date': str(p.created_at),
+            'customer': p.booking.customer_name,
+            'amount': float(p.amount),
+            'method': 'Razorpay',
+            'status': p.status,
+            'booking_ref': p.booking.booking_ref
+        } for p in payments]
+        
         return Response(data)
 
 

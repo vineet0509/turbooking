@@ -60,6 +60,25 @@ class TurfGroundListCreateView(APIView):
 
     def post(self, request):
         tenant = request.user.owned_tenant
+        
+        # Check subscription limit
+        try:
+            subscription = tenant.subscription
+            max_turfs = subscription.plan.max_turfs
+            current_turfs = TurfGround.objects.filter(tenant=tenant).count()
+            
+            if current_turfs >= max_turfs:
+                return Response({
+                    'error': f'You have reached the maximum number of turfs allowed for your {subscription.plan.display_name} plan ({max_turfs}). Please upgrade your plan to add more.'
+                }, status=403)
+        except Exception:
+            # If no subscription, maybe allow 1 turf by default or force subscription
+            current_turfs = TurfGround.objects.filter(tenant=tenant).count()
+            if current_turfs >= 1:
+                return Response({
+                    'error': 'Please subscribe to a plan to add more turfs.'
+                }, status=403)
+
         serializer = TurfGroundSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(tenant=tenant)

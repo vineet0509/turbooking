@@ -235,7 +235,10 @@
           <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Last Name</label><input type="text" [(ngModel)]="registerForm.last_name" name="ln" placeholder="Kumar"></div>
         </div>
         <div class="form-group" *ngIf="!isCustomerRegister"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Business Name</label><input type="text" [(ngModel)]="registerForm.businessName" name="bn" placeholder="Green Turf Arena" required></div>
-        <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Email Address</label><input type="email" [(ngModel)]="registerForm.email" name="em" placeholder="arjun&#64;example.com" required></div>
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Email Address</label><input type="email" [(ngModel)]="registerForm.email" name="em" placeholder="arjun&#64;example.com" required></div>
+          <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Phone Number</label><input type="text" [(ngModel)]="registerForm.phone" name="ph" placeholder="9876543210"></div>
+        </div>
         <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Password</label><input type="password" [(ngModel)]="registerForm.password" name="pw" placeholder="••••••••" required></div>
           <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Confirm</label><input type="password" [(ngModel)]="registerForm.confirm_password" name="cpw" placeholder="••••••••" required></div>

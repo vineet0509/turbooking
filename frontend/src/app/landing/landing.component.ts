@@ -75,9 +75,15 @@ export class LandingComponent implements OnInit {
   }
 
   submitRegister(): void {
-    const { first_name, email, phone, password, confirm_password } = this.registerForm;
+    const { first_name, email, phone, password, confirm_password, businessName } = this.registerForm;
+    
     if (!first_name || !email || !password || !confirm_password) {
       this.registerError = 'Please fill in all required fields.';
+      return;
+    }
+
+    if (!this.isCustomerRegister && !businessName) {
+      this.registerError = 'Business Name is required for arena owners.';
       return;
     }
     if (password !== confirm_password) {

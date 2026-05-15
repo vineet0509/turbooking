@@ -50,6 +50,16 @@ class AdminTenantListView(APIView):
             qs = qs.filter(status=status_filter)
         data = []
         for t in qs:
+            # Get subscription info
+            plan_name = "No Plan"
+            try:
+                plan_name = t.subscription.plan.display_name
+            except Exception:
+                pass
+            
+            # Get turf count
+            turf_count = t.turfs.count()
+
             data.append({
                 'id': str(t.id),
                 'name': t.name,
@@ -58,6 +68,8 @@ class AdminTenantListView(APIView):
                 'owner_email': t.owner.email,
                 'owner_name': t.owner.full_name,
                 'city': t.city,
+                'plan': plan_name,
+                'turf_count': turf_count,
                 'created_at': t.created_at,
             })
         return Response(data)

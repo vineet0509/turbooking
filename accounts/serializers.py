@@ -33,7 +33,7 @@ class TurfOwnerRegisterSerializer(serializers.ModelSerializer):
         from subscriptions.models import SubscriptionPlan, TenantSubscription
 
         # Get business name from extra fields if provided, else use first_name
-        business_name = self.context.get('request').data.get('business_name', f"{validated_data['first_name']}'s Turf")
+        business_name = self.context.get('request').data.get('business_name') or f"{validated_data['first_name']}'s Turf"
         
         with transaction.atomic():
             user = User.objects.create_user(

@@ -4,6 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { Booking, User } from '../models/booking.model';
+import { SubscriptionService } from '../services/subscription.service';
+import { TenantService } from '../services/tenant.service';
+import { BookingService } from '../services/booking.service';
+import { SubscriptionPlan, TenantSubscription } from '../models/subscription.model';
+import { Tenant, TurfGround } from '../models/tenant.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +19,7 @@ import { Booking, User } from '../models/booking.model';
 })
 export class DashboardComponent implements OnInit {
   user: User | null = null;
+  tenant: Tenant | null = null;
   activeMenu: string = 'dashboard';
   pageTitle: string = 'Dashboard Overview';
   today: string = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -22,6 +28,8 @@ export class DashboardComponent implements OnInit {
   menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'bookings', label: 'All Bookings', icon: '📅' },
+    { id: 'turfs', label: 'My Turfs', icon: '🏟️' },
+    { id: 'plans', label: 'Subscription', icon: '💳' },
     { id: 'customers', label: 'Customers', icon: '👥' },
     { id: 'payments', label: 'Payments', icon: '💰' },
     { id: 'settings', label: 'Arena Settings', icon: '⚙️' },
@@ -72,22 +80,155 @@ export class DashboardComponent implements OnInit {
     { id: 'PAY_98228', date: '2026-05-13 05:30 PM', customer: 'Sneha Patel', amount: '₹800', method: 'Cash', status: 'success' },
   ];
 
+  // ── Subscription & Turfs ────────────────────────────────────────────────
+  plans: SubscriptionPlan[] = [];
+  mySubscription: TenantSubscription | null = null;
+  myTurfs: TurfGround[] = [];
+  
+  showTurfModal = false;
+  turfForm: TurfGround = {
+    name: '',
+    turf_type: 'cricket',
+    description: '',
+    capacity: 22,
+    pitch_type: 'Astro Turf',
+    price_per_hour: 800,
+    weekend_price_per_hour: 1000
+  };
+
   // ── Form Models ──────────────────────────────────────────────────────────
   showBookingModal = false;
-  bookingForm = { customer: '', phone: '', turf: 'Main Cricket Pitch', date: '', time: '', amount: '800' };
+  bookingForm = { customer: '', phone: '', turf: '', date: '', time: '', amount: '800' };
+
+  openBookingModal(): void {
+    this.bookingForm = {
+      customer: '',
+      phone: '',
+      date: new Date().toISOString().split('T')[0],
+      time: '18:00',
+      turf: this.myTurfs.length > 0 ? this.myTurfs[0].name : '',
+      amount: '800'
+    };
+    this.showBookingModal = true;
+  }
 
   showCancelModal = false;
   selectedBooking: Booking | null = null;
   cancelForm = { reason: '' };
 
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService, 
+    private router: Router,
+    private subService: SubscriptionService,
+    private tenantService: TenantService,
+    private bookingService: BookingService
+  ) {}
 
   ngOnInit(): void {
     this.user = this.auth.currentUser as User;
+    this.loadData();
+  }
+
+  loadData(): void {
     this.auth.fetchProfile().subscribe({
       next: user => this.user = user as User,
       error: () => this.logout()
     });
+
+    this.subService.getPlans().subscribe(plans => this.plans = plans);
+    this.subService.getMySubscription().subscribe(sub => this.mySubscription = sub);
+    this.tenantService.getTurfs().subscribe(turfs => this.myTurfs = turfs);
+    this.tenantService.getProfile().subscribe(tenant => this.tenant = tenant);
+    
+    // Load dynamic data
+    this.bookingService.getMyBookings().subscribe(data => {
+      this.recentBookings = data.map(b => ({
+        id: b.booking_ref,
+        date: b.date,
+        time: b.start_time,
+        customer: b.customer,
+        turf: b.turf,
+        amount: `₹${b.amount}`,
+        status: b.status,
+        refundStatus: b.status === 'cancelled' ? 'Processing' : ''
+      }));
+    });
+
+    this.bookingService.getCustomers().subscribe(data => this.customers = data);
+    this.bookingService.getPayments().subscribe(data => {
+      this.payments = data.map(p => ({
+        ...p,
+        amount: `₹${p.amount}`
+      }));
+    });
+  }
+
+  saveProfile(): void {
+    if (this.tenant) {
+      this.tenantService.updateProfile(this.tenant).subscribe({
+        next: (res) => {
+          this.tenant = res;
+          alert('Arena profile updated successfully!');
+        },
+        error: (err) => alert(err.error?.error || 'Failed to update profile')
+      });
+    }
+  }
+
+  selectPlan(planId: string): void {
+    if (confirm('Are you sure you want to subscribe to this plan?')) {
+      this.subService.subscribe(planId, 'monthly').subscribe({
+        next: (res) => {
+          alert(res.message);
+          this.loadData();
+          this.setMenu('dashboard');
+        },
+        error: (err) => alert(err.error?.error || 'Failed to subscribe')
+      });
+    }
+  }
+
+  saveTurf(): void {
+    if (this.turfForm.id) {
+      this.tenantService.updateTurf(this.turfForm.id, this.turfForm).subscribe({
+        next: () => {
+          this.loadData();
+          this.showTurfModal = false;
+        },
+        error: (err) => alert(err.error?.error || 'Failed to update turf')
+      });
+    } else {
+      this.tenantService.createTurf(this.turfForm).subscribe({
+        next: () => {
+          this.loadData();
+          this.showTurfModal = false;
+        },
+        error: (err) => alert(err.error?.error || 'Failed to create turf')
+      });
+    }
+  }
+
+  openTurfModal(turf?: TurfGround): void {
+    if (turf) {
+      this.turfForm = { ...turf };
+    } else {
+      this.turfForm = {
+        name: '',
+        turf_type: 'cricket',
+        description: '',
+        capacity: 22,
+        pitch_type: 'Astro Turf',
+        price_per_hour: 800,
+        weekend_price_per_hour: 1000
+      };
+    }
+    this.showTurfModal = true;
+  }
+
+  deleteTurf(id: string): void {
+    if (confirm('Are you sure you want to delete this turf?')) {
+      this.tenantService.deleteTurf(id).subscribe(() => this.loadData());
+    }
   }
 
   logout(): void {

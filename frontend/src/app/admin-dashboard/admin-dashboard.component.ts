@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { AdminService, AdminTenant } from '../services/admin.service';
 import { User } from '../models/booking.model';
 
 @Component({
@@ -15,45 +16,70 @@ import { User } from '../models/booking.model';
 export class AdminDashboardComponent implements OnInit {
   user: User | null = null;
   activeMenu = 'overview';
+  stats: any[] = [];
 
-  // ── Platform Stats ───────────────────────────────────────────────────────
-  stats = [
-    { label: 'Total Arenas', value: '42', icon: '🏟️', color: 'blue' },
-    { label: 'Platform Revenue', value: '₹2,45,000', icon: '📈', color: 'gold' },
-    { label: 'Active Players', value: '1,850', icon: '🏃', color: 'green' },
-    { label: 'Pending Approvals', value: '3', icon: '⏳', color: 'orange' },
-  ];
+  // ── Platform Data ───────────────────────────────────────────────────────
+  arenas: AdminTenant[] = [];
+  platformStats: any = null;
 
-  // ── Pending Arena Registrations ──────────────────────────────────────────
-  pendingArenas = [
-    { id: 'TNT_991', name: 'Sky Turf Bangalore', owner: 'Vikram Rao', date: '2026-05-13', status: 'pending' },
-    { id: 'TNT_992', name: 'Elite Football Club', owner: 'Sanjay Dutt', date: '2026-05-14', status: 'pending' },
-    { id: 'TNT_993', name: 'Grassroot Arena', owner: 'Anita Gill', date: '2026-05-14', status: 'pending' },
-  ];
-
-  // ── Subscription Tiers ───────────────────────────────────────────────────
-  subscriptions = [
-    { plan: 'Pro Monthly', count: 28, revenue: '₹42,000' },
-    { plan: 'Enterprise Yearly', count: 14, revenue: '₹1,68,000' },
-  ];
-
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService, 
+    private router: Router,
+    private adminService: AdminService
+  ) {}
 
   ngOnInit(): void {
     this.user = this.auth.currentUser as User;
     if (this.user?.role !== 'super_admin') {
       this.router.navigate(['/']);
+      return;
+    }
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.adminService.getStats().subscribe(res => {
+      this.platformStats = res;
+      this.stats = [
+        { label: 'Total Arenas', value: res.tenants.total.toString(), icon: '🏟️', color: 'blue' },
+        { label: 'Platform Revenue', value: '₹' + res.revenue.total.toLocaleString(), icon: '📈', color: 'gold' },
+        { label: 'Total Bookings', value: res.bookings.total.toString(), icon: '📅', color: 'green' },
+        { label: 'Pending Approvals', value: res.tenants.pending.toString(), icon: '⏳', color: 'orange' },
+      ];
+    });
+
+    this.adminService.getTenants().subscribe(res => this.arenas = res);
+  }
+
+  approveArena(id: string): void {
+    if (confirm('Approve this arena?')) {
+      this.adminService.updateTenantStatus(id, 'approved').subscribe(() => {
+        alert('Arena approved!');
+        this.loadData();
+      });
     }
   }
 
-  approveArena(arena: any): void {
-    arena.status = 'approved';
-    alert(`${arena.name} has been approved and their subdomain is now active.`);
+  suspendArena(id: string): void {
+    if (confirm('Suspend this arena?')) {
+      this.adminService.updateTenantStatus(id, 'suspended').subscribe(() => {
+        alert('Arena suspended!');
+        this.loadData();
+      });
+    }
   }
 
-  rejectArena(arena: any): void {
-    arena.status = 'rejected';
-    alert(`${arena.name} registration has been rejected.`);
+  rejectArena(id: string): void {
+    if (confirm('Reject this arena registration?')) {
+      this.adminService.updateTenantStatus(id, 'suspended').subscribe(() => {
+        alert('Arena registration rejected.');
+        this.loadData();
+      });
+    }
+  }
+
+  setMenu(menu: string): void {
+    this.activeMenu = menu;
   }
 
   logout(): void {

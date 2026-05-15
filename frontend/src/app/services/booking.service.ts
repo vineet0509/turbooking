@@ -25,6 +25,16 @@ export class BookingService {
     return this.http.post(`${API_BASE}/verify/`, payload, { headers: this.auth.authHeaders });
   }
 
+  // Fetch all customers for this tenant
+  getCustomers(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_BASE}/customers/`, { headers: this.auth.authHeaders });
+  }
+
+  // Fetch all payments for this tenant
+  getPayments(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_BASE}/payments/`, { headers: this.auth.authHeaders });
+  }
+
   // Cancel booking
   cancelBooking(bookingId: string, reason: string): Observable<any> {
     return this.http.post(`${API_BASE}/${bookingId}/cancel/`, { reason }, { headers: this.auth.authHeaders });
