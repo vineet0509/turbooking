@@ -18,6 +18,8 @@ export class LandingComponent implements OnInit {
   showRegisterModal = false;
   showLoginModal = false;
   showTermsModal = false;
+  showAboutModal = false;
+  showContactModal = false;
   isCustomerRegister = false;
   selectedSlot: string | null = null;
 
@@ -37,7 +39,7 @@ export class LandingComponent implements OnInit {
   registerError = '';
 
   // ── Login Form ────────────────────────────────────────────────
-  loginForm = { email: '', password: '' };
+  loginForm = { username: '', password: '' };
   loginLoading = false;
   loginError = '';
   showLoginPassword = false;
@@ -137,15 +139,15 @@ export class LandingComponent implements OnInit {
   // ── Login ─────────────────────────────────────────────────────
   openLogin(): void {
     this.loginError = '';
-    this.loginForm = { email: '', password: '' };
+    this.loginForm = { username: '', password: '' };
     this.showLoginModal = true;
     this.showRegisterModal = false;
     document.body.style.overflow = 'hidden';
   }
 
   submitLogin(): void {
-    if (!this.loginForm.email || !this.loginForm.password) {
-      this.loginError = 'Email and password are required.';
+    if (!this.loginForm.username || !this.loginForm.password) {
+      this.loginError = 'Email/Phone and password are required.';
       return;
     }
     this.loginLoading = true;
@@ -188,6 +190,8 @@ export class LandingComponent implements OnInit {
     this.showRegisterModal = false;
     this.showLoginModal = false;
     this.showTermsModal = false;
+    this.showAboutModal = false;
+    this.showContactModal = false;
     document.body.style.overflow = '';
     this.registerLoading = false;
     this.loginLoading = false;
@@ -201,6 +205,14 @@ export class LandingComponent implements OnInit {
     document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  openAbout(): void {
+    this.showAboutModal = true;
+  }
+
+  openContact(): void {
+    this.showContactModal = true;
+  }
+
   selectDemoSlot(event: MouseEvent): void {
     const el = event.target as HTMLElement;
     document.querySelectorAll('.slot.selected').forEach(s => s.classList.remove('selected'));
@@ -211,7 +223,7 @@ export class LandingComponent implements OnInit {
   switchToLogin(): void {
     this.showRegisterModal = false;
     this.loginError = '';
-    this.loginForm = { email: '', password: '' };
+    this.loginForm = { username: '', password: '' };
     this.showLoginModal = true;
   }
 

@@ -10,19 +10,19 @@ const API_BASE = 'http://localhost:8000/api/bookings';
 export class BookingService {
   constructor(private http: HttpClient, private auth: AuthService) {}
 
-  // Fetch my bookings from backend
-  getMyBookings(): Observable<Booking[]> {
-    return this.http.get<Booking[]>(`${API_BASE}/my/`, { headers: this.auth.authHeaders });
+  // Fetch bookings from backend
+  getBookings(): Observable<Booking[]> {
+    return this.http.get<Booking[]>(`${API_BASE}/`, { headers: this.auth.authHeaders });
   }
 
   // Create a pending booking + Razorpay order
-  initiateBooking(slotId: string): Observable<any> {
-    return this.http.post(`${API_BASE}/create/`, { slot_id: slotId }, { headers: this.auth.authHeaders });
+  initiateBooking(slotId: string, usePass: boolean = false): Observable<any> {
+    return this.http.post(`${API_BASE}/create/`, { slot_id: slotId, use_pass: usePass }, { headers: this.auth.authHeaders });
   }
 
   // Verify payment and confirm booking
   verifyPayment(payload: any): Observable<any> {
-    return this.http.post(`${API_BASE}/verify/`, payload, { headers: this.auth.authHeaders });
+    return this.http.post(`${API_BASE}/verify-payment/`, payload, { headers: this.auth.authHeaders });
   }
 
   // Fetch all customers for this tenant
@@ -33,6 +33,10 @@ export class BookingService {
   // Fetch all payments for this tenant
   getPayments(): Observable<any[]> {
     return this.http.get<any[]>(`${API_BASE}/payments/`, { headers: this.auth.authHeaders });
+  }
+
+  getPasses(): Observable<any[]> {
+    return this.http.get<any[]>(`${API_BASE}/passes/`, { headers: this.auth.authHeaders });
   }
 
   // Cancel booking

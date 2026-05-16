@@ -34,17 +34,23 @@ class SlotListCreateView(APIView):
 
     def post(self, request):
         tenant = request.user.owned_tenant
+        if not hasattr(tenant, 'subscription') or not tenant.subscription.is_valid:
+            return Response({'error': 'Subscription expired. Please renew to manage slots.'}, status=403)
         try:
             turf = TurfGround.objects.get(pk=request.data['turf_id'], tenant=tenant)
         except TurfGround.DoesNotExist:
             return Response({'error': 'Turf not found'}, status=404)
+
+        # Enforce 1 hour duration
+        start_dt = datetime.strptime(request.data['start_time'], '%H:%M')
+        end_time = (start_dt + timedelta(hours=1)).time()
 
         slot = Slot.objects.create(
             tenant=tenant,
             turf=turf,
             date=request.data['date'],
             start_time=request.data['start_time'],
-            end_time=request.data['end_time'],
+            end_time=end_time,
             price=request.data.get('price', turf.price_per_hour),
         )
         return Response({'id': str(slot.id), 'message': 'Slot created'}, status=201)
@@ -93,17 +99,23 @@ class SlotTemplateView(APIView):
 
     def post(self, request):
         tenant = request.user.owned_tenant
+        if not hasattr(tenant, 'subscription') or not tenant.subscription.is_valid:
+            return Response({'error': 'Subscription expired. Please renew to manage templates.'}, status=403)
         try:
             turf = TurfGround.objects.get(pk=request.data['turf_id'], tenant=tenant)
         except TurfGround.DoesNotExist:
             return Response({'error': 'Turf not found'}, status=404)
+
+        # Enforce 1 hour duration
+        start_dt = datetime.strptime(request.data['start_time'], '%H:%M')
+        end_time = (start_dt + timedelta(hours=1)).time()
 
         template, created = SlotTemplate.objects.get_or_create(
             tenant=tenant,
             turf=turf,
             day_of_week=request.data['day_of_week'],
             start_time=request.data['start_time'],
-            defaults={'end_time': request.data['end_time']}
+            defaults={'end_time': end_time}
         )
         return Response({'created': created, 'id': str(template.id)}, status=201 if created else 200)
 
@@ -114,6 +126,8 @@ class GenerateSlotsView(APIView):
 
     def post(self, request):
         tenant = request.user.owned_tenant
+        if not hasattr(tenant, 'subscription') or not tenant.subscription.is_valid:
+            return Response({'error': 'Subscription expired. Please renew to generate slots.'}, status=403)
         start_date = datetime.strptime(request.data['start_date'], '%Y-%m-%d').date()
         end_date = datetime.strptime(request.data['end_date'], '%Y-%m-%d').date()
 

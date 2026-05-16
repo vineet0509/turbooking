@@ -7,11 +7,20 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from slots.models import Slot
-from .models import Booking, Payment
+from tenants.models import Tenant
+from .models import Booking, Payment, MonthlyPass
 
-razorpay_client = razorpay.Client(
-    auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET)
-)
+def get_razorpay_client(tenant):
+    """Return a Razorpay client using the tenant's specific keys"""
+    if tenant.razorpay_key_id and tenant.razorpay_key_secret:
+        if 'your_key_id' not in tenant.razorpay_key_id:
+            return razorpay.Client(auth=(tenant.razorpay_key_id, tenant.razorpay_key_secret))
+    
+    # Fallback to platform keys
+    if 'your_key_id' in settings.RAZORPAY_KEY_ID:
+        raise Exception("Razorpay Keys not configured. Please set them in Settings.")
+        
+    return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 
 class BookingCreateView(APIView):
@@ -24,6 +33,10 @@ class BookingCreateView(APIView):
             slot = Slot.objects.get(pk=slot_id, status=Slot.AVAILABLE)
         except Slot.DoesNotExist:
             return Response({'error': 'Slot not available'}, status=400)
+
+        # Check Subscription Validity
+        if not hasattr(slot.tenant, 'subscription') or not slot.tenant.subscription.is_valid:
+            return Response({'error': 'Booking failed: This arena\'s subscription has expired.'}, status=403)
 
         # Create booking (pending)
         booking = Booking.objects.create(
@@ -40,6 +53,60 @@ class BookingCreateView(APIView):
         # Mark slot as booked optimistically
         slot.status = Slot.BOOKED
         slot.save()
+
+        # Check if paying with pass
+        use_pass = request.data.get('use_pass', False)
+        if use_pass:
+            active_pass = MonthlyPass.objects.filter(
+                tenant=slot.tenant, customer=request.user, 
+                is_active=True, end_date__gte=timezone.now().date(),
+                bookings_used__lt=30 # Assuming 30 is default, or use F expression
+            ).filter(models.Q(bookings_used__lt=models.F('total_bookings_allowed'))).first()
+            
+            if active_pass:
+                booking.status = Booking.CONFIRMED
+                booking.total_amount = 0
+                booking.save()
+                
+                active_pass.bookings_used += 1
+                active_pass.save()
+                
+                return Response({
+                    'message': 'Booking confirmed using monthly pass!',
+                    'booking_id': str(booking.id),
+                    'status': 'confirmed'
+                }, status=201)
+
+        # Create Razorpay Order
+        client = get_razorpay_client(slot.tenant)
+        amount_in_paise = int(booking.total_amount * 100)
+        try:
+            razorpay_order = client.order.create({
+                'amount': amount_in_paise,
+                'currency': 'INR',
+                'payment_capture': '1',
+                'notes': {
+                    'booking_id': str(booking.id),
+                    'customer_id': str(request.user.id)
+                }
+            })
+            
+            booking.razorpay_order_id = razorpay_order['id']
+            booking.save()
+            
+            return Response({
+                'booking_id': str(booking.id),
+                'razorpay_order_id': razorpay_order['id'],
+                'amount': booking.total_amount,
+                'key_id': slot.tenant.razorpay_key_id or settings.RAZORPAY_KEY_ID,
+                'status': 'pending_payment'
+            })
+        except Exception as e:
+            # Rollback slot status
+            slot.status = Slot.AVAILABLE
+            slot.save()
+            booking.delete()
+            return Response({'error': f'Payment gateway error: {str(e)}'}, status=500)
 
         # Create Razorpay order
         amount_paise = int(slot.price * 100)
@@ -86,36 +153,50 @@ class VerifyPaymentView(APIView):
         payment_id = request.data.get('razorpay_payment_id')
         signature = request.data.get('razorpay_signature')
 
+        # Get Booking and Tenant
+        try:
+            booking = Booking.objects.get(razorpay_order_id=order_id)
+        except Booking.DoesNotExist:
+            return Response({'error': 'Booking not found'}, status=404)
+
         # Verify signature
+        client = get_razorpay_client(booking.tenant)
+        key_secret = booking.tenant.razorpay_key_secret or settings.RAZORPAY_KEY_SECRET
+        
         generated_sig = hmac.new(
-            settings.RAZORPAY_KEY_SECRET.encode(),
+            key_secret.encode(),
             f'{order_id}|{payment_id}'.encode(),
             hashlib.sha256
         ).hexdigest()
 
-        if generated_sig != signature:
-            return Response({'error': 'Payment verification failed.'}, status=400)
-
-        try:
-            payment = Payment.objects.get(razorpay_order_id=order_id)
-        except Payment.DoesNotExist:
-            return Response({'error': 'Payment record not found.'}, status=404)
-
-        payment.razorpay_payment_id = payment_id
-        payment.razorpay_signature = signature
-        payment.status = Payment.SUCCESS
-        payment.paid_at = timezone.now()
-        payment.save()
-
-        booking = payment.booking
-        booking.status = Booking.CONFIRMED
-        booking.save()
-
-        return Response({
-            'message': 'Payment successful! Booking confirmed.',
-            'booking_ref': booking.booking_ref,
-            'status': booking.status,
-        })
+        if generated_sig == signature:
+            try:
+                booking = Booking.objects.get(razorpay_order_id=order_id)
+                booking.status = Booking.CONFIRMED
+                booking.razorpay_payment_id = payment_id
+                booking.save()
+                
+                # Record Payment
+                Payment.objects.update_or_create(
+                    razorpay_order_id=order_id,
+                    defaults={
+                        'booking': booking,
+                        'razorpay_payment_id': payment_id,
+                        'amount': booking.total_amount,
+                        'status': 'success',
+                        'payment_method': 'razorpay'
+                    }
+                )
+                
+                return Response({
+                    'message': 'Payment successful! Booking confirmed.',
+                    'booking_ref': booking.booking_ref,
+                    'status': booking.status,
+                })
+            except Booking.DoesNotExist:
+                return Response({'error': 'Booking not found for this order'}, status=404)
+        else:
+            return Response({'error': 'Invalid payment signature'}, status=400)
 
 
 class BookingListView(APIView):
@@ -193,6 +274,115 @@ class PaymentListView(APIView):
             'booking_ref': p.booking.booking_ref
         } for p in payments]
         
+        return Response(data)
+
+
+class BuyMonthlyPassView(APIView):
+    """Initiate monthly pass purchase"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        tenant_id = request.data.get('tenant_id')
+        try:
+            tenant = Tenant.objects.get(pk=tenant_id)
+        except Tenant.DoesNotExist:
+            return Response({'error': 'Tenant not found'}, status=404)
+
+        if tenant.monthly_pass_price <= 0:
+            return Response({'error': 'Monthly pass not available for this arena'}, status=400)
+
+        amount_paise = int(tenant.monthly_pass_price * 100)
+        client = get_razorpay_client(tenant)
+        rz_order = client.order.create({
+            'amount': amount_paise,
+            'currency': 'INR',
+            'notes': {
+                'type': 'monthly_pass',
+                'tenant_id': str(tenant.id),
+                'customer_id': str(request.user.id)
+            }
+        })
+
+        return Response({
+            'razorpay_order_id': rz_order['id'],
+            'razorpay_key_id': tenant.razorpay_key_id or settings.RAZORPAY_KEY_ID,
+            'amount': amount_paise,
+            'currency': 'INR',
+            'tenant_name': tenant.name
+        })
+
+
+class VerifyPassPaymentView(APIView):
+    """Verify payment and activate monthly pass"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get('razorpay_order_id')
+        payment_id = request.data.get('razorpay_payment_id')
+        signature = request.data.get('razorpay_signature')
+        tenant_id = request.data.get('tenant_id')
+
+        # Verify signature
+        try:
+            tenant = Tenant.objects.get(pk=tenant_id)
+        except Tenant.DoesNotExist:
+            return Response({'error': 'Tenant not found'}, status=404)
+
+        client = get_razorpay_client(tenant)
+        key_secret = tenant.razorpay_key_secret or settings.RAZORPAY_KEY_SECRET
+
+        generated_sig = hmac.new(
+            key_secret.encode(),
+            f'{order_id}|{payment_id}'.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        if generated_sig != signature:
+            return Response({'error': 'Payment verification failed.'}, status=400)
+
+        tenant = Tenant.objects.get(pk=tenant_id)
+        
+        # Create MonthlyPass
+        start_date = timezone.now().date()
+        end_date = start_date + timezone.timedelta(days=30)
+        
+        pass_obj = MonthlyPass.objects.create(
+            tenant=tenant,
+            customer=request.user,
+            price=tenant.monthly_pass_price,
+            start_date=start_date,
+            end_date=end_date,
+            total_bookings_allowed=tenant.monthly_pass_bookings,
+            is_active=True
+        )
+
+        return Response({
+            'message': 'Monthly Pass activated!',
+            'end_date': str(end_date),
+            'bookings_allowed': pass_obj.total_bookings_allowed
+        })
+
+
+class PassListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if user.role == 'turf_owner':
+            passes = MonthlyPass.objects.filter(tenant=user.owned_tenant).select_related('customer')
+        else:
+            passes = MonthlyPass.objects.filter(customer=user).select_related('tenant')
+
+        data = [{
+            'id': str(p.id),
+            'tenant': p.tenant.name,
+            'customer': p.customer.full_name,
+            'start_date': str(p.start_date),
+            'end_date': str(p.end_date),
+            'bookings_used': p.bookings_used,
+            'total_allowed': p.total_bookings_allowed,
+            'is_active': p.is_active and p.end_date >= timezone.now().date()
+        } for p in passes]
         return Response(data)
 
 

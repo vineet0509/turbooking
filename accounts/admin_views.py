@@ -108,6 +108,7 @@ class AdminTenantDetailView(APIView):
         return Response({'error': 'Invalid status'}, status=400)
 
 
+
 class AdminRevenueView(APIView):
     permission_classes = [IsSuperAdmin]
 
@@ -121,4 +122,29 @@ class AdminRevenueView(APIView):
                 'amount': float(p.amount),
                 'paid_at': p.paid_at,
             })
-        return Response({'payments': data, 'total': sum(float(p.amount) for p in Payment.objects.filter(status='success'))})
+        total_revenue = sum(float(p.amount) for p in payments)
+        return Response({'payments': data, 'total': total_revenue})
+
+
+class GlobalSettingsView(APIView):
+    permission_classes = [IsSuperAdmin]
+
+    def get(self, request):
+        from .models import GlobalSettings
+        settings, _ = GlobalSettings.objects.get_or_create(id=1)
+        return Response({
+            'razorpay_key_id': settings.razorpay_key_id,
+            'razorpay_key_secret': settings.razorpay_key_secret,
+            'platform_name': settings.platform_name,
+            'support_email': settings.support_email,
+        })
+
+    def post(self, request):
+        from .models import GlobalSettings
+        settings, _ = GlobalSettings.objects.get_or_create(id=1)
+        settings.razorpay_key_id = request.data.get('razorpay_key_id', settings.razorpay_key_id)
+        settings.razorpay_key_secret = request.data.get('razorpay_key_secret', settings.razorpay_key_secret)
+        settings.platform_name = request.data.get('platform_name', settings.platform_name)
+        settings.support_email = request.data.get('support_email', settings.support_email)
+        settings.save()
+        return Response({'message': 'Settings updated successfully'})

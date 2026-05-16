@@ -25,12 +25,12 @@ export class CustomerDashboardComponent implements OnInit {
   
   // Real-time Slot Availability Mock
   availableSlots = [
-    { time: '06:00 PM', status: 'available' },
-    { time: '07:00 PM', status: 'available' },
-    { time: '08:00 PM', status: 'booked' },
-    { time: '09:00 PM', status: 'available' },
-    { time: '10:00 PM', status: 'available' },
-    { time: '11:00 PM', status: 'available' }
+    { id: 'S1', time: '06:00 PM', status: 'available' },
+    { id: 'S2', time: '07:00 PM', status: 'available' },
+    { id: 'S3', time: '08:00 PM', status: 'booked' },
+    { id: 'S4', time: '09:00 PM', status: 'available' },
+    { id: 'S5', time: '10:00 PM', status: 'available' },
+    { id: 'S6', time: '11:00 PM', status: 'available' }
   ];
   
   newSlot: string = '';
@@ -43,6 +43,11 @@ export class CustomerDashboardComponent implements OnInit {
     date: new Date().toISOString().split('T')[0],
     time: ''
   };
+
+  myPasses: any[] = [];
+  showPassesModal = false;
+  paymentMethod: 'online' | 'pass' = 'online';
+  activePass: any = null;
 
   constructor(
     private auth: AuthService, 
@@ -58,11 +63,23 @@ export class CustomerDashboardComponent implements OnInit {
       next: user => this.user = user as User,
       error: () => this.logout()
     });
+    this.loadPasses();
+  }
+
+  loadPasses(): void {
+    this.bookingService.getPasses().subscribe(res => {
+      this.myPasses = res;
+    });
+  }
+
+  openPassesModal() {
+    this.showPassesModal = true;
+    this.loadPasses();
   }
 
   loadBookings(): void {
     this.isLoading = true;
-    this.bookingService.getMyBookings().subscribe({
+    this.bookingService.getBookings().subscribe({
       next: (data) => {
         this.myBookings = data;
         this.isLoading = false;
@@ -154,9 +171,11 @@ export class CustomerDashboardComponent implements OnInit {
   }
 
   showTermsModal = false;
+  showAboutModal = false;
   showContactModal = false;
 
   openTerms() { this.showTermsModal = true; }
+  openAbout() { this.showAboutModal = true; }
   openContact() { this.showContactModal = true; }
 
   openNewBooking(): void {
@@ -176,18 +195,67 @@ export class CustomerDashboardComponent implements OnInit {
 
   goToPayment(): void {
     const slot = this.availableSlots.find(s => s.time === this.newBookingForm.time);
-    if (!slot || slot.status === 'booked') {
-      alert('Error: This slot is no longer available. Please select another time.');
+    if (!slot) {
+      alert('Error: Please select a time slot.');
       return;
     }
+    // Check for active pass for this arena
+    this.activePass = this.myPasses.find(p => p.tenant === this.newBookingForm.turf && p.is_active);
+    this.paymentMethod = this.activePass ? 'pass' : 'online';
     this.bookingStep = 'payment';
   }
 
   confirmNewBooking(): void {
+    const selectedSlot = this.availableSlots.find(s => s.time === this.newBookingForm.time);
+    if (!selectedSlot) return;
+
     this.bookingStep = 'processing';
-    this.bookingService.initiateBooking('mock_slot_id').subscribe({
-      next: () => setTimeout(() => this.verifyAndComplete(), 1500),
-      error: () => setTimeout(() => this.verifyAndComplete(), 1500)
+    
+    this.bookingService.initiateBooking(selectedSlot.id, this.paymentMethod === 'pass').subscribe({
+      next: (res: any) => {
+        if (this.paymentMethod === 'pass' || res.status === 'confirmed') {
+          this.verifyAndComplete();
+        } else if (res.status === 'pending_payment') {
+          const options = {
+            key: res.key_id,
+            amount: res.amount * 100,
+            currency: 'INR',
+            name: 'TurfBook',
+            description: 'Turf Booking Payment',
+            order_id: res.razorpay_order_id,
+            handler: (response: any) => {
+              this.bookingService.verifyPayment({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature
+              }).subscribe({
+                next: () => this.verifyAndComplete(),
+                error: (err: any) => {
+                  alert('Payment verification failed');
+                  this.bookingStep = 'payment';
+                }
+              });
+            },
+            prefill: {
+              name: this.user?.first_name + ' ' + this.user?.last_name,
+              email: this.user?.email,
+              contact: this.user?.phone
+            },
+            theme: { color: '#10b981' },
+            modal: {
+              ondismiss: () => {
+                this.bookingStep = 'payment';
+              }
+            }
+          };
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+        }
+      },
+      error: (err: any) => {
+        alert(err.error?.error || 'Failed to initiate booking');
+        this.bookingStep = 'payment';
+      }
     });
   }
 

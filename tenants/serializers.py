@@ -46,7 +46,23 @@ class TenantSetupSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         request = self.context.get('request')
-        return Tenant.objects.create(owner=request.user, **validated_data)
+        tenant = Tenant.objects.create(owner=request.user, **validated_data)
+        
+        # Create default 14-day trial
+        from subscriptions.models import SubscriptionPlan, TenantSubscription
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        plan = SubscriptionPlan.objects.filter(name='starter').first()
+        if plan:
+            TenantSubscription.objects.create(
+                tenant=tenant,
+                plan=plan,
+                status=TenantSubscription.TRIAL,
+                start_date=timezone.now().date(),
+                end_date=timezone.now().date() + timedelta(days=14)
+            )
+        return tenant
 
 
 class TenantPublicSerializer(serializers.ModelSerializer):

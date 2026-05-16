@@ -15,10 +15,14 @@ export class SubscriptionService {
   }
 
   getMySubscription(): Observable<TenantSubscription> {
-    return this.http.get<TenantSubscription>(`${API_BASE}/my/`, { headers: this.auth.authHeaders });
+    return this.http.get<TenantSubscription>(`${API_BASE}/my-plan/`, { headers: this.auth.authHeaders });
   }
 
   subscribe(planId: string, billingCycle: string): Observable<any> {
     return this.http.post(`${API_BASE}/subscribe/`, { plan_id: planId, billing_cycle: billingCycle }, { headers: this.auth.authHeaders });
+  }
+
+  verifyPayment(payload: any): Observable<any> {
+    return this.http.post(`${API_BASE}/verify-payment/`, payload, { headers: this.auth.authHeaders });
   }
 }

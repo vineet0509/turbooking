@@ -19,6 +19,16 @@ class TurfOwnerRegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email', 'phone', 'first_name', 'last_name', 'password', 'confirm_password']
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('This email is already registered.')
+        return value
+
+    def validate_phone(self, value):
+        if value and User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError('This phone number is already in use.')
+        return value
+
     def validate(self, data):
         if data['password'] != data.pop('confirm_password'):
             raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
@@ -63,7 +73,15 @@ class TurfOwnerRegisterSerializer(serializers.ModelSerializer):
             try:
                 plan = SubscriptionPlan.objects.get(name=plan_name)
             except SubscriptionPlan.DoesNotExist:
-                plan = SubscriptionPlan.objects.get(name='pro')
+                # Robust fallback: Try 'pro', then 'starter', then first available, then create a dummy
+                plan = SubscriptionPlan.objects.filter(name__in=['pro', 'starter', 'business']).first()
+                if not plan:
+                    plan = SubscriptionPlan.objects.first()
+                if not plan:
+                    plan = SubscriptionPlan.objects.create(
+                        name='pro', display_name='Pro Arena', 
+                        price_monthly=999, max_turfs=3
+                    )
 
             TenantSubscription.objects.create(
                 tenant=tenant,
@@ -77,11 +95,27 @@ class TurfOwnerRegisterSerializer(serializers.ModelSerializer):
 
 
 class CustomerRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=6)
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['email', 'phone', 'first_name', 'last_name', 'password']
+        fields = ['email', 'phone', 'first_name', 'last_name', 'password', 'confirm_password']
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('This email is already registered.')
+        return value
+
+    def validate_phone(self, value):
+        if value and User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError('This phone number is already in use.')
+        return value
+
+    def validate(self, data):
+        if data['password'] != data.pop('confirm_password'):
+            raise serializers.ValidationError({'confirm_password': 'Passwords do not match.'})
+        return data
 
     def create(self, validated_data):
         request = self.context.get('request')
@@ -95,17 +129,27 @@ class CustomerRegisterSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    username = serializers.CharField()  # Can be email or phone
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        user = authenticate(email=data['email'], password=data['password'])
-        if not user:
-            raise serializers.ValidationError('Invalid email or password.')
-        if not user.is_active:
-            raise serializers.ValidationError('Account is disabled.')
-        data['user'] = user
-        return data
+        username = data.get('username')
+        password = data.get('password')
+
+        if not username or not password:
+            raise serializers.ValidationError('Username and password are required.')
+
+        # Try looking up by email or phone
+        from django.db.models import Q
+        user = User.objects.filter(Q(email=username) | Q(phone=username)).first()
+
+        if user and user.check_password(password):
+            if not user.is_active:
+                raise serializers.ValidationError('Account is disabled.')
+            data['user'] = user
+            return data
+        
+        raise serializers.ValidationError('Invalid email/phone or password.')
 
 
 class TokenResponseSerializer(serializers.Serializer):

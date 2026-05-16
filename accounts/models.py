@@ -33,7 +33,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
-    phone = models.CharField(max_length=15, blank=True)
+    phone = models.CharField(max_length=15, unique=True, null=True, blank=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100, blank=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=CUSTOMER)
@@ -72,3 +72,18 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def is_super_admin(self):
         return self.role == self.SUPER_ADMIN
+
+
+class GlobalSettings(models.Model):
+    """Platform-wide settings for the Super Admin"""
+    razorpay_key_id = models.CharField(max_length=255, blank=True)
+    razorpay_key_secret = models.CharField(max_length=255, blank=True)
+    platform_name = models.CharField(max_length=100, default='TurfBook')
+    support_email = models.EmailField(blank=True)
+    
+    class Meta:
+        verbose_name = 'Global Settings'
+        verbose_name_plural = 'Global Settings'
+
+    def __str__(self):
+        return "Global Settings"

@@ -91,3 +91,34 @@ class Payment(models.Model):
 
     def __str__(self):
         return f'Payment for {self.booking.booking_ref} — {self.status}'
+
+
+class MonthlyPass(models.Model):
+    """Monthly pass purchased by a customer for an arena"""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    tenant = models.ForeignKey('tenants.Tenant', on_delete=models.CASCADE, related_name='passes')
+    customer = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='passes')
+    
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    
+    total_bookings_allowed = models.IntegerField(default=30)
+    bookings_used = models.IntegerField(default=0)
+    
+    is_active = models.BooleanField(default=True)
+    payment = models.OneToOneField(Payment, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'monthly_passes'
+        verbose_name_plural = 'Monthly Passes'
+
+    def __str__(self):
+        return f'Pass: {self.customer.full_name} @ {self.tenant.name}'
+
+    @property
+    def remaining_bookings(self):
+        return self.total_bookings_allowed - self.bookings_used

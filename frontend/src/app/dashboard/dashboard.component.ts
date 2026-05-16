@@ -24,15 +24,19 @@ export class DashboardComponent implements OnInit {
   pageTitle: string = 'Dashboard Overview';
   today: string = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
+  bookings: Booking[] = [];
+  customers: any[] = [];
+  payments: any[] = [];
+  activePasses: any[] = [];
+
   // ── Navigation ──────────────────────────────────────────────────────────
   menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'bookings', label: 'All Bookings', icon: '📅' },
     { id: 'turfs', label: 'My Turfs', icon: '🏟️' },
-    { id: 'plans', label: 'Subscription', icon: '💳' },
-    { id: 'customers', label: 'Customers', icon: '👥' },
+    { id: 'customers', label: 'Players', icon: '👥' },
     { id: 'payments', label: 'Payments', icon: '💰' },
-    { id: 'settings', label: 'Arena Settings', icon: '⚙️' },
+    { id: 'plans', label: 'Subscription', icon: '💳' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
   setMenu(id: string): void {
@@ -64,20 +68,6 @@ export class DashboardComponent implements OnInit {
     { id: '#BK1026', date: '2026-05-14', time: '12:00 PM', customer: 'Rahul Verma', turf: 'Football Cage A', amount: '₹1,000', status: 'pending', phone: '9876543212', cancelReason: '', refundStatus: '' },
     { id: '#BK1027', date: '2026-05-14', time: '03:00 PM', customer: 'Sneha Patel', turf: 'Main Cricket Pitch', amount: '₹800', status: 'confirmed', phone: '9876543213', cancelReason: '', refundStatus: '' },
     { id: '#BK1028', date: '2026-05-14', time: '05:00 PM', customer: 'Amit Shah', turf: 'Badminton Court 1', amount: '₹1,200', status: 'cancelled', phone: '9876543214', cancelReason: 'Customer out of station', refundStatus: 'Completed (80%)' },
-  ];
-
-  customers = [
-    { name: 'Arjun Kumar', email: 'arjun@example.com', phone: '9876543210', totalBookings: 12, lastBooking: '2026-05-13' },
-    { name: 'Priya Singh', email: 'priya@example.com', phone: '9876543211', totalBookings: 8, lastBooking: '2026-05-14' },
-    { name: 'Rahul Verma', email: 'rahul@example.com', phone: '9876543212', totalBookings: 5, lastBooking: '2026-05-12' },
-    { name: 'Sneha Patel', email: 'sneha@example.com', phone: '9876543213', totalBookings: 15, lastBooking: '2026-05-14' },
-  ];
-
-  payments = [
-    { id: 'PAY_98231', date: '2026-05-14 10:05 AM', customer: 'Priya Singh', amount: '₹800', method: 'UPI', status: 'success' },
-    { id: 'PAY_98230', date: '2026-05-14 08:12 AM', customer: 'Arjun Kumar', amount: '₹800', method: 'Card', status: 'success' },
-    { id: 'PAY_98229', date: '2026-05-13 09:45 PM', customer: 'Amit Shah', amount: '₹1,200', method: 'UPI', status: 'failed' },
-    { id: 'PAY_98228', date: '2026-05-13 05:30 PM', customer: 'Sneha Patel', amount: '₹800', method: 'Cash', status: 'success' },
   ];
 
   // ── Subscription & Turfs ────────────────────────────────────────────────
@@ -116,6 +106,9 @@ export class DashboardComponent implements OnInit {
   selectedBooking: Booking | null = null;
   cancelForm = { reason: '' };
 
+  showAboutModal = false;
+  showContactModal = false;
+
   constructor(
     private auth: AuthService, 
     private router: Router,
@@ -130,6 +123,12 @@ export class DashboardComponent implements OnInit {
   }
 
   loadData(): void {
+    this.bookingService.getBookings().subscribe(res => this.bookings = res);
+    this.bookingService.getCustomers().subscribe(res => this.customers = res);
+    this.bookingService.getPayments().subscribe(res => this.payments = res);
+    this.bookingService.getPasses().subscribe(res => this.activePasses = res);
+    this.tenantService.getProfile().subscribe(res => this.tenant = res);
+
     this.auth.fetchProfile().subscribe({
       next: user => this.user = user as User,
       error: () => this.logout()
@@ -138,12 +137,11 @@ export class DashboardComponent implements OnInit {
     this.subService.getPlans().subscribe(plans => this.plans = plans);
     this.subService.getMySubscription().subscribe(sub => this.mySubscription = sub);
     this.tenantService.getTurfs().subscribe(turfs => this.myTurfs = turfs);
-    this.tenantService.getProfile().subscribe(tenant => this.tenant = tenant);
     
     // Load dynamic data
-    this.bookingService.getMyBookings().subscribe(data => {
-      this.recentBookings = data.map(b => ({
-        id: b.booking_ref,
+    this.bookingService.getBookings().subscribe(data => {
+      this.recentBookings = data.map((b: any) => ({
+        id: b.booking_ref || b.id,
         date: b.date,
         time: b.start_time,
         customer: b.customer,
@@ -163,6 +161,26 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  get isSubscriptionValid(): boolean {
+    if (!this.mySubscription) return false;
+    if (this.mySubscription.status !== 'active' && this.mySubscription.status !== 'trial') return false;
+    
+    // Normalize to date-only comparison to ensure access until end of day
+    const end = new Date(this.mySubscription.end_date);
+    end.setHours(23, 59, 59, 999); 
+    const now = new Date();
+    return end >= now;
+  }
+
+  getDaysRemaining(endDate: string | undefined): number {
+    if (!endDate) return 0;
+    const end = new Date(endDate);
+    const now = new Date();
+    const diffTime = end.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  }
+
   saveProfile(): void {
     if (this.tenant) {
       this.tenantService.updateProfile(this.tenant).subscribe({
@@ -179,11 +197,41 @@ export class DashboardComponent implements OnInit {
     if (confirm('Are you sure you want to subscribe to this plan?')) {
       this.subService.subscribe(planId, 'monthly').subscribe({
         next: (res) => {
-          alert(res.message);
-          this.loadData();
-          this.setMenu('dashboard');
+          if (res.status === 'pending_payment') {
+            const options = {
+              key: res.key_id,
+              amount: res.amount * 100,
+              currency: 'INR',
+              name: 'TurfBook SaaS',
+              description: `Subscription for ${res.plan_name}`,
+              order_id: res.razorpay_order_id,
+              handler: (response: any) => {
+                this.subService.verifyPayment({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  plan_id: planId,
+                  billing_cycle: 'monthly'
+                }).subscribe({
+                  next: () => {
+                    alert('Subscription successful!');
+                    this.loadData();
+                    this.activeMenu = 'dashboard';
+                  },
+                  error: () => alert('Payment verification failed.')
+                });
+              },
+              prefill: {
+                name: this.user?.first_name + ' ' + this.user?.last_name,
+                email: this.user?.email
+              },
+              theme: { color: '#10b981' }
+            };
+            const rzp = new (window as any).Razorpay(options);
+            rzp.open();
+          }
         },
-        error: (err) => alert(err.error?.error || 'Failed to subscribe')
+        error: (err) => alert(err.error?.error || 'Failed to initiate subscription')
       });
     }
   }
@@ -234,6 +282,14 @@ export class DashboardComponent implements OnInit {
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/']);
+  }
+
+  openAbout(): void {
+    this.showAboutModal = true;
+  }
+
+  openContact(): void {
+    this.showContactModal = true;
   }
 
   // ── Actions ───────────────────────────────────────────────────────────────

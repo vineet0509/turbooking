@@ -316,7 +316,7 @@
       <div class="error-alert" style="background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 12px; border-radius: 8px; margin-bottom: 20px;" *ngIf="loginError">⚠️ {{ loginError }}</div>
 
       <form (ngSubmit)="submitLogin()" class="register-form" style="display: flex; flex-direction: column; gap: 16px;">
-        <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Email</label><input type="email" [(ngModel)]="loginForm.email" name="lem" placeholder="email&#64;example.com" required></div>
+        <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Email or Phone</label><input type="text" [(ngModel)]="loginForm.username" name="lem" placeholder="email&#64;example.com or 9876543210" required></div>
         <div class="form-group"><label style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase;">Password</label><input type="password" [(ngModel)]="loginForm.password" name="lpw" placeholder="••••••••" required></div>
         
         <button type="submit" class="btn btn-primary mt-4" style="width:100%; padding: 16px; font-size: 16px;" [disabled]="loginLoading">
@@ -331,4 +331,148 @@
     </div>
   </div>
 
+  <!-- Footer -->
+  <footer class="footer" style="padding: 60px 0 30px; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.2);">
+    <div class="container">
+      <div class="flex flex-col items-center">
+        <div class="logo mb-6">
+          <span class="logo-icon">🏟️</span>
+          <span class="logo-text">Turf<span class="text-gradient">Book</span></span>
+        </div>
+        <p class="text-muted text-center max-w-lg mb-8">
+          The all-in-one platform for sports arena management. Empowering turf owners to scale their business with digital bookings and automated payments.
+        </p>
+        <div class="footer-nav-grid grid md:grid-cols-4 gap-12 w-full mb-12 text-left">
+          <div class="footer-col">
+            <h4 class="mb-4" style="font-size: 14px; text-transform: uppercase; color: #fff;">Platform</h4>
+            <ul class="list-none grid gap-2">
+              <li><a href="#features" class="text-muted hover:text-primary transition-colors">Features</a></li>
+              <li><a href="#pricing" class="text-muted hover:text-primary transition-colors">Pricing</a></li>
+              <li><a href="#demo" class="text-muted hover:text-primary transition-colors">Live Demo</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4 class="mb-4" style="font-size: 14px; text-transform: uppercase; color: #fff;">Company</h4>
+            <ul class="list-none grid gap-2">
+              <li><a href="javascript:void(0)" (click)="openAbout()" class="text-muted hover:text-primary transition-colors">About Us</a></li>
+              <li><a href="javascript:void(0)" (click)="openContact()" class="text-muted hover:text-primary transition-colors">Contact Support</a></li>
+              <li><a href="javascript:void(0)" class="text-muted hover:text-primary transition-colors">Success Stories</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4 class="mb-4" style="font-size: 14px; text-transform: uppercase; color: #fff;">Legal</h4>
+            <ul class="list-none grid gap-2">
+              <li><a href="javascript:void(0)" class="text-muted hover:text-primary transition-colors">Privacy Policy</a></li>
+              <li><a href="javascript:void(0)" class="text-muted hover:text-primary transition-colors">Terms of Service</a></li>
+              <li><a href="javascript:void(0)" class="text-muted hover:text-primary transition-colors">Cookie Policy</a></li>
+            </ul>
+          </div>
+          <div class="footer-col">
+            <h4 class="mb-4" style="font-size: 14px; text-transform: uppercase; color: #fff;">Contact</h4>
+            <div class="text-muted" style="font-size: 14px;">
+              <p class="mb-2">📍 Vynkra Tech Park, BLR</p>
+              <p class="mb-2">✉️ support&#64;vynkra.com</p>
+              <p>📞 +91 98765 43210</p>
+            </div>
+          </div>
+        </div>
+        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; width: 100%; text-align: center;">
+          <p style="font-size: 14px; color: #94a3b8;">
+            &copy; 2026 TurfBook. All Rights Reserved. | <span class="text-gold" style="font-weight: 600;">Powered by Vynkra Technologies</span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- About Us Modal -->
+  <div class="modal-overlay" *ngIf="showAboutModal" (click)="closeAllModals()">
+    <div class="modal-box animate-fade-in" style="max-width: 800px; max-height: 90vh; overflow-y: auto;" (click)="$event.stopPropagation()">
+      <button class="modal-close" style="position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.05); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; cursor: pointer;" (click)="showAboutModal = false">✕</button>
+      
+      <div class="flex items-center gap-4 mb-8">
+        <div class="p-4 rounded-2xl bg-primary/10" style="background: rgba(16, 185, 129, 0.1); font-size: 32px;">🚀</div>
+        <div>
+          <h2 style="font-size: 28px; margin: 0;">Our Story</h2>
+          <p class="text-muted" style="margin: 0;">Transforming Arena Management since 2026</p>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="text-muted" style="line-height: 1.8; font-size: 15px;">
+          <p class="mb-4">TurfBook was born out of a simple observation: sports arena owners were spending too much time on paperwork and phone calls, and not enough time growing their communities.</p>
+          <p class="mb-6">Partnering with <strong>Vynkra Technologies</strong>, we've built a system that doesn't just manage bookings—it scales businesses. We believe that every ground, from the smallest cage to the largest stadium, deserves professional-grade digital tools.</p>
+          
+          <div class="glass-card p-6 border-l-4 border-primary">
+            <h4 style="margin-bottom: 8px;">The Mission</h4>
+            <p style="font-size: 13px;">To build the world's most intuitive and powerful operating system for sports communities.</p>
+          </div>
+        </div>
+
+        <div class="stats-grid grid grid-cols-2 gap-4">
+          <div class="premium-card text-center">
+            <div style="font-size: 24px; font-weight: 800; color: var(--primary);">500+</div>
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Active Arenas</div>
+          </div>
+          <div class="premium-card text-center">
+            <div style="font-size: 24px; font-weight: 800; color: var(--secondary);">10k+</div>
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Daily Players</div>
+          </div>
+          <div class="premium-card text-center">
+            <div style="font-size: 24px; font-weight: 800; color: #f59e0b;">99.9%</div>
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Uptime</div>
+          </div>
+          <div class="premium-card text-center">
+            <div style="font-size: 24px; font-weight: 800; color: #ec4899;">24/7</div>
+            <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Expert Support</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 flex justify-center">
+        <button class="btn btn-primary" style="padding: 16px 60px;" (click)="showAboutModal = false">Back to Website</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Us Modal -->
+  <div class="modal-overlay" *ngIf="showContactModal" (click)="closeAllModals()">
+    <div class="modal-box animate-fade-in" style="max-width: 600px;" (click)="$event.stopPropagation()">
+      <button class="modal-close" style="position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.05); border: none; width: 40px; height: 40px; border-radius: 50%; color: #fff; cursor: pointer;" (click)="showContactModal = false">✕</button>
+      
+      <div class="text-center mb-10">
+        <div class="inline-block p-4 rounded-3xl bg-secondary/10 mb-4" style="background: rgba(59, 130, 246, 0.1); font-size: 32px;">🤝</div>
+        <h2 style="font-size: 32px;">Let's Connect</h2>
+        <p class="text-muted">We're here to help you win every game.</p>
+      </div>
+
+      <div class="grid gap-4">
+        <div class="premium-card flex items-center gap-6 p-6">
+          <div style="font-size: 28px;">📍</div>
+          <div>
+            <h4 style="margin: 0; font-size: 16px;">Vynkra Global HQ</h4>
+            <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Innovation Park, Silicon Valley of India, Bangalore</p>
+          </div>
+        </div>
+        <div class="premium-card flex items-center gap-6 p-6">
+          <div style="font-size: 28px;">✉️</div>
+          <div>
+            <h4 style="margin: 0; font-size: 16px;">Direct Support</h4>
+            <p style="margin: 0; font-size: 13px; color: var(--primary); font-weight: 700;">support&#64;vynkra.com</p>
+          </div>
+        </div>
+        <div class="premium-card flex items-center gap-6 p-6">
+          <div style="font-size: 28px;">📞</div>
+          <div>
+            <h4 style="margin: 0; font-size: 16px;">Business Hotline</h4>
+            <p style="margin: 0; font-size: 13px; color: var(--text-muted);">+91 98765 43210 (Mon-Fri, 9am - 6pm)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-10 p-6 rounded-2xl bg-white/5 border border-white/5 text-center">
+        <p style="font-size: 13px; color: var(--text-muted);">Looking for a customized enterprise solution? <br/> <a href="mailto:sales&#64;vynkra.com" class="text-gradient">Contact Sales Team →</a></p>
+      </div>
+    </div>
+  </div>
 </main>

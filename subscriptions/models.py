@@ -86,6 +86,8 @@ class TenantSubscription(models.Model):
         return f'{self.tenant.name} — {self.plan.display_name} ({self.status})'
 
     @property
-    def is_active(self):
+    def is_valid(self):
         from django.utils import timezone
-        return self.status == self.ACTIVE and self.end_date >= timezone.now().date()
+        if self.status not in [self.ACTIVE, self.TRIAL]:
+            return False
+        return self.end_date >= timezone.now().date()

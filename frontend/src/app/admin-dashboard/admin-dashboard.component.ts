@@ -17,10 +17,18 @@ export class AdminDashboardComponent implements OnInit {
   user: User | null = null;
   activeMenu = 'overview';
   stats: any[] = [];
+  showAboutModal = false;
+  showContactModal = false;
 
   // ── Platform Data ───────────────────────────────────────────────────────
   arenas: AdminTenant[] = [];
   platformStats: any = null;
+  globalConfig: any = {
+    razorpay_key_id: '',
+    razorpay_key_secret: '',
+    platform_name: '',
+    support_email: ''
+  };
 
   constructor(
     private auth: AuthService, 
@@ -49,6 +57,14 @@ export class AdminDashboardComponent implements OnInit {
     });
 
     this.adminService.getTenants().subscribe(res => this.arenas = res);
+    this.adminService.getSettings().subscribe(res => this.globalConfig = res);
+  }
+
+  saveGlobalSettings(): void {
+    this.adminService.updateSettings(this.globalConfig).subscribe({
+      next: () => alert('Global settings updated!'),
+      error: () => alert('Failed to update settings.')
+    });
   }
 
   approveArena(id: string): void {
@@ -85,5 +101,13 @@ export class AdminDashboardComponent implements OnInit {
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/']);
+  }
+
+  openAbout(): void {
+    this.showAboutModal = true;
+  }
+
+  openContact(): void {
+    this.showContactModal = true;
   }
 }

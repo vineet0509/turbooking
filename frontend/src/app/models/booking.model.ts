@@ -1,5 +1,6 @@
 export interface Booking {
   id: string;
+  booking_ref?: string;
   date: string;
   time: string;
   customer?: string;

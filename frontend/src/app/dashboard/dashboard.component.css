@@ -71,6 +71,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 100;
 }
 
 .page-title { font-size: 24px; font-weight: 900; }
@@ -112,6 +114,11 @@
 
 .stat-label { font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
 .stat-value { font-size: 24px; font-weight: 900; display: block; }
+
+.notifications-wrapper {
+  position: relative;
+  z-index: 1001;
+}
 
 /* ── Dashboard Grid ── */
 .dashboard-grid {
@@ -186,6 +193,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
 }
 
@@ -198,11 +206,88 @@
   font-weight: 900;
 }
 
-.logout-btn {
-  background: transparent;
+.user-info { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+.user-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
+.user-role { font-size: 11px; color: #94a3b8; white-space: nowrap; }
+
+.logout-premium {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.logout-premium:hover {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.sidebar-support-card {
+  margin: 20px 16px;
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(16, 185, 129, 0.05));
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 20px;
+}
+
+.support-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.sidebar-support-card p {
+  font-size: 11px;
   color: #94a3b8;
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 6px; border-radius: 8px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.support-links {
+  display: flex;
+  gap: 8px;
+}
+
+.support-links button {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 6px 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #f8fafc;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.support-links button:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: var(--primary);
+}
+
+.powered-by-sidebar {
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  text-align: center;
+}
+
+.powered-by-sidebar p {
+  font-size: 9px;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
 }
 
 /* ── Form Controls (Dark) ── */

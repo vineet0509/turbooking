@@ -30,6 +30,10 @@ export interface Tenant {
   primary_color: string;
   secondary_color: string;
   tagline: string;
+  monthly_pass_price: number;
+  monthly_pass_bookings: number;
   amenities: string[];
+  razorpay_key_id?: string;
+  razorpay_key_secret?: string;
   turfs: TurfGround[];
 }

@@ -18,7 +18,10 @@
         <h1>My Bookings</h1>
         <p class="text-muted">Manage your upcoming turf sessions and history</p>
       </div>
-      <button class="btn btn-primary" (click)="openNewBooking()">+ Book New Turf</button>
+      <div class="flex gap-4">
+        <button class="btn btn-outline" (click)="openPassesModal()">🎫 My Passes</button>
+        <button class="btn btn-primary" (click)="openNewBooking()">+ Book New Turf</button>
+      </div>
     </header>
 
     <div class="bookings-grid">
@@ -63,18 +66,6 @@
       <p class="text-muted">You haven't booked any turfs yet. Start playing!</p>
       <button class="btn btn-primary mt-4" (click)="router.navigate(['/'])">Find Turfs Near Me</button>
     </div>
-
-    <!-- Customer Footer -->
-    <footer class="customer-footer">
-      <div class="footer-links">
-        <a href="javascript:void(0)" (click)="openTerms()">Terms & Conditions</a>
-        <a href="javascript:void(0)" (click)="openContact()">Contact Us</a>
-      </div>
-      <div class="footer-copyright">
-        © 2026 TurfBook. All rights reserved.
-      </div>
-    </footer>
-  </main>
 
   <!-- ── Cancel Modal ── -->
   <div class="modal-overlay" *ngIf="showCancelModal" (click)="showCancelModal = false">
@@ -142,13 +133,31 @@
       <!-- Step 2: Payment Section -->
       <div *ngIf="bookingStep === 'payment'">
         <div class="panel-header mb-6"><h2>💳 Secure Payment</h2></div>
+        
         <div class="payment-methods" style="display: grid; gap: 12px;">
-          <div class="payment-option active" style="border: 1px solid var(--primary); background: rgba(16, 185, 129, 0.05); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+          <!-- Monthly Pass Option -->
+          <div class="payment-option" *ngIf="activePass" 
+               [class.active]="paymentMethod === 'pass'"
+               (click)="paymentMethod = 'pass'"
+               style="border: 1px solid rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer;">
+            <span style="font-size: 24px;">🎫</span>
+            <div class="flex-1">
+              <div style="font-weight: 700;">Use Monthly Pass</div>
+              <div style="font-size: 12px; color: #94a3b8;">{{ activePass.bookings_used }}/{{ activePass.total_allowed }} slots used</div>
+            </div>
+            <div class="check-icon" *ngIf="paymentMethod === 'pass'">✅</div>
+          </div>
+
+          <div class="payment-option" 
+               [class.active]="paymentMethod === 'online'"
+               (click)="paymentMethod = 'online'"
+               style="border: 1px solid rgba(255,255,255,0.1); padding: 16px; border-radius: 12px; display: flex; align-items: center; gap: 12px; cursor: pointer;">
             <span style="font-size: 24px;">💳</span>
-            <div>
+            <div class="flex-1">
               <div style="font-weight: 700;">Online Payment (Razorpay)</div>
               <div style="font-size: 12px; color: #94a3b8;">UPI, Cards, Netbanking</div>
             </div>
+            <div class="check-icon" *ngIf="paymentMethod === 'online'">✅</div>
           </div>
         </div>
         <div class="payment-info mt-8 p-4 bg-glass rounded-xl border border-white/5">
@@ -156,7 +165,9 @@
         </div>
         <div class="modal-actions flex gap-4 mt-8">
           <button class="btn btn-outline flex-1" (click)="bookingStep = 'details'">Back</button>
-          <button class="btn btn-primary flex-1" (click)="confirmNewBooking()">Pay ₹1,000 Now</button>
+          <button class="btn btn-primary flex-1" (click)="confirmNewBooking()">
+            {{ paymentMethod === 'pass' ? 'Confirm with Pass' : 'Pay ₹1,000 Now' }}
+          </button>
         </div>
       </div>
 
@@ -176,4 +187,90 @@
 
     </div>
   </div>
+
+  <!-- ── Monthly Passes Modal ── -->
+  <div class="modal-overlay" *ngIf="showPassesModal" (click)="showPassesModal = false">
+    <div class="modal-box glass-panel" style="max-width: 600px;" (click)="$event.stopPropagation()">
+      <div class="panel-header mb-6 flex justify-between items-center">
+        <h2>🎫 My Monthly Passes</h2>
+        <button class="btn btn-outline btn-sm" (click)="showPassesModal = false">✕</button>
+      </div>
+
+      <div class="passes-list grid gap-4">
+        <div class="glass-card p-6 border border-white/5" *ngFor="let p of myPasses">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-xl font-bold">{{ p.tenant }}</h3>
+              <p class="text-xs text-muted">Valid until {{ p.end_date }}</p>
+            </div>
+            <span class="status-badge" [class.active]="p.is_active">{{ p.is_active ? 'Active' : 'Expired' }}</span>
+          </div>
+          
+          <div class="usage-stats mt-6">
+            <div class="flex justify-between text-xs mb-2">
+              <span>Slots Used</span>
+              <span>{{ p.bookings_used }} / {{ p.total_allowed }}</span>
+            </div>
+            <div class="progress-bar-container" style="height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden;">
+              <div class="progress-bar" [style.width.%]="(p.bookings_used / p.total_allowed) * 100" style="height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state p-8 text-center bg-white/5 rounded-2xl" *ngIf="myPasses.length === 0">
+          <div style="font-size: 32px; margin-bottom: 16px;">🎟️</div>
+          <p class="text-muted">You don't have any active monthly passes.</p>
+          <p class="text-xs mt-2">Purchase a pass at your favorite arena to save more!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="mt-12 py-8 border-t border-white/5 text-center">
+    <div class="flex justify-center gap-6 mb-4" style="font-size: 13px; color: #94a3b8;">
+      <a href="javascript:void(0)" class="hover:text-white" (click)="openAbout()">About Us</a>
+      <a href="javascript:void(0)" class="hover:text-white" (click)="openContact()">Contact Us</a>
+      <a href="javascript:void(0)" class="hover:text-white" (click)="openTerms()">Privacy Policy</a>
+    </div>
+    <p style="font-size: 12px; color: #64748b; font-weight: 500;">
+      &copy; 2026 TurfBook. All Rights Reserved. | <span class="text-gold" style="font-weight: 700;">Powered by Vynkra Technologies</span>
+    </p>
+  </footer>
+
+  <!-- About Us Modal -->
+  <div class="modal-overlay" *ngIf="showAboutModal" (click)="showAboutModal = false">
+    <div class="modal-box glass-panel animate-fade-in" style="max-width: 600px;" (click)="$event.stopPropagation()">
+      <div class="panel-header mb-6"><h2>🚀 About TurfBook</h2></div>
+      <div class="text-muted" style="line-height: 1.6; font-size: 14px;">
+        <p class="mb-4">TurfBook is your companion for discovering and booking the best sports arenas in the city.</p>
+        <p class="mb-4">Our mission is to make sports accessible to everyone. Whether you're a weekend warrior or a professional athlete, we help you find the perfect pitch at the perfect time.</p>
+      </div>
+      <button class="btn btn-primary mt-8 w-full" (click)="showAboutModal = false">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- Contact Us Modal -->
+  <div class="modal-overlay" *ngIf="showContactModal" (click)="showContactModal = false">
+    <div class="modal-box glass-panel animate-fade-in" style="max-width: 450px;" (click)="$event.stopPropagation()">
+      <div class="panel-header mb-6"><h2>📧 Contact Us</h2></div>
+      <div class="contact-methods grid gap-4">
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4">
+          <span style="font-size: 20px;">✉️</span>
+          <div>
+            <div style="font-weight: 700; font-size: 14px;">Player Support</div>
+            <div style="font-size: 12px; color: #94a3b8;">support&#64;turfbook.com</div>
+          </div>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4">
+          <span style="font-size: 20px;">📍</span>
+          <div>
+            <div style="font-weight: 700; font-size: 14px;">Headquarters</div>
+            <div style="font-size: 12px; color: #94a3b8;">Vynkra Tech Park, Sector 4, MG Road</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary mt-8 w-full" (click)="showContactModal = false">Close</button>
+    </div>
+  </div>
+</main>
 </div>

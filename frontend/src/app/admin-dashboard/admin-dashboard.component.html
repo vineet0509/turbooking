@@ -15,10 +15,64 @@
       <div class="nav-item" [class.active]="activeMenu === 'settings'" (click)="setMenu('settings')">⚙️ Global Settings</div>
     </nav>
 
-    <div class="sidebar-footer mt-auto p-6">
-      <button (click)="logout()" style="background: none; border: none; color: #ef4444; font-weight: 700; cursor: pointer;">⏻ Logout Platform</button>
+    <div class="sidebar-support-card" style="margin: 20px 16px; padding: 18px; background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px;">
+      <div style="font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 6px;">Platform Support</div>
+      <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">Management tools and infrastructure support channels.</p>
+      <div style="display: flex; gap: 8px;">
+        <button (click)="openAbout()" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 6px 4px; border-radius: 8px; font-size: 10px; font-weight: 700; color: #f8fafc; cursor: pointer;">System Info</button>
+        <button (click)="openContact()" style="flex: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 6px 4px; border-radius: 8px; font-size: 10px; font-weight: 700; color: #f8fafc; cursor: pointer;">Get Help</button>
+      </div>
+    </div>
+
+    <div class="sidebar-footer" style="margin-top: auto; padding: 24px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+      <button class="logout-premium" (click)="logout()" 
+              style="width: 100%; background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: 0.3s;">
+        <span>⏻</span>
+        Logout Platform
+      </button>
+    </div>
+    
+    <div class="powered-by-sidebar" style="padding: 15px 20px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+      <p style="font-size: 9px; color: #64748b; font-weight: 600; letter-spacing: 1px; margin-bottom: 4px;">POWERED BY</p>
+      <span class="text-gold" style="font-weight: 700; font-size: 11px;">VYNKRA TECHNOLOGIES</span>
     </div>
   </aside>
+
+  <!-- About Us Modal -->
+  <div class="modal-overlay" *ngIf="showAboutModal" (click)="showAboutModal = false">
+    <div class="modal-box glass-panel animate-fade-in" style="max-width: 600px; max-height: 80vh; overflow-y: auto;" (click)="$event.stopPropagation()">
+      <div class="panel-header mb-6"><h2>🚀 About Platform Architecture</h2></div>
+      <div class="text-muted" style="line-height: 1.6; font-size: 14px;">
+        <p class="mb-4">This administrative dashboard is the nerve center of the TurfBook ecosystem. Built by <strong>Vynkra Technologies</strong>, it manages multi-tenant isolation, platform-wide revenue, and global configuration.</p>
+        <p class="mb-4">Our focus is on providing you with real-time oversight of every arena registration and subscription lifecycle, ensuring the platform runs at peak performance.</p>
+      </div>
+      <button class="btn btn-primary mt-8 w-full" (click)="showAboutModal = false">Close</button>
+    </div>
+  </div>
+
+  <!-- Contact Us Modal -->
+  <div class="modal-overlay" *ngIf="showContactModal" (click)="showContactModal = false">
+    <div class="modal-box glass-panel animate-fade-in" style="max-width: 450px;" (click)="$event.stopPropagation()">
+      <div class="panel-header mb-6"><h2>📧 Internal Tech Support</h2></div>
+      <div class="contact-methods grid gap-4">
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4">
+          <span style="font-size: 20px;">🛡️</span>
+          <div>
+            <div style="font-weight: 700; font-size: 14px;">Master Tech Lead</div>
+            <div style="font-size: 12px; color: #94a3b8;">admin-support&#64;vynkra.com</div>
+          </div>
+        </div>
+        <div class="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center gap-4">
+          <span style="font-size: 20px;">🚨</span>
+          <div>
+            <div style="font-weight: 700; font-size: 14px;">Emergency Escalation</div>
+            <div style="font-size: 12px; color: #94a3b8;">ops-emergency&#64;vynkra.com</div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-primary mt-8 w-full" (click)="showContactModal = false">Close</button>
+    </div>
+  </div>
 
   <!-- Main -->
   <main class="main-area">
@@ -143,6 +197,94 @@
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Revenue Menu -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'revenue'">
+      <div class="glass-panel">
+        <h2 style="font-size: 24px; margin-bottom: 20px;">Platform Revenue (Subscriptions)</h2>
+        <div class="flex gap-6 mb-8">
+          <div class="stat-card" style="flex:1">
+            <span class="stat-label">Total Subscriptions</span>
+            <span class="stat-value">{{ arenas.length }}</span>
+          </div>
+          <div class="stat-card" style="flex:1">
+            <span class="stat-label">Platform Revenue</span>
+            <span class="stat-value text-gold">₹{{ platformStats?.revenue.total || 0 }}</span>
+          </div>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Arena</th>
+              <th>Plan</th>
+              <th>Billing</th>
+              <th>Amount</th>
+              <th>Payment ID</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of arenas">
+              <td>{{ a.created_at | date }}</td>
+              <td><strong>{{ a.name }}</strong></td>
+              <td>{{ a.plan }}</td>
+              <td>Monthly</td>
+              <td><strong class="text-gold">₹{{ a.plan === 'pro' ? 999 : (a.plan === 'starter' ? 499 : 1999) }}</strong></td>
+              <td><code>rzp_test_p{{ a.id.substring(0,6) }}</code></td>
+              <td><span class="status-tag approved">Paid</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- Settings Menu -->
+    <div class="content animate-fade-in" *ngIf="activeMenu === 'settings'">
+      <div class="glass-panel" style="max-width: 800px;">
+        <div class="flex justify-between items-center mb-8">
+          <h2 style="font-size: 24px;">⚙️ Global Platform Settings</h2>
+          <button class="btn-approve" (click)="saveGlobalSettings()">Save Platform Config</button>
+        </div>
+
+        <div class="grid gap-8">
+          <!-- Razorpay Keys -->
+          <div style="background: rgba(255,215,0,0.05); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,215,0,0.1);">
+            <h3 class="text-gold mb-6" style="display: flex; align-items: center; gap: 10px;">
+              <span>💳</span> Platform Razorpay Credentials
+            </h3>
+            <p style="font-size: 13px; color: #94a3b8; margin-bottom: 24px;">
+              These keys are used to collect <strong>Subscription Fees</strong> from Arena Owners.
+            </p>
+            <div class="grid gap-6">
+              <div class="form-group">
+                <label style="color: #94a3b8; font-size: 12px; margin-bottom: 8px; display: block;">RAZORPAY KEY ID</label>
+                <input type="password" [(ngModel)]="globalConfig.razorpay_key_id" class="form-control" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 12px; width: 100%; color: #fff; border-radius: 8px;">
+              </div>
+              <div class="form-group">
+                <label style="color: #94a3b8; font-size: 12px; margin-bottom: 8px; display: block;">RAZORPAY KEY SECRET</label>
+                <input type="password" [(ngModel)]="globalConfig.razorpay_key_secret" class="form-control" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 12px; width: 100%; color: #fff; border-radius: 8px;">
+              </div>
+            </div>
+          </div>
+
+          <!-- General Info -->
+          <div class="glass-panel" style="padding: 30px;">
+            <h3 class="mb-6">System Configuration</h3>
+            <div class="grid gap-6">
+              <div class="form-group">
+                <label style="color: #94a3b8; font-size: 12px; margin-bottom: 8px; display: block;">PLATFORM NAME</label>
+                <input type="text" [(ngModel)]="globalConfig.platform_name" class="form-control" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 12px; width: 100%; color: #fff; border-radius: 8px;">
+              </div>
+              <div class="form-group">
+                <label style="color: #94a3b8; font-size: 12px; margin-bottom: 8px; display: block;">SUPPORT EMAIL</label>
+                <input type="email" [(ngModel)]="globalConfig.support_email" class="form-control" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 12px; width: 100%; color: #fff; border-radius: 8px;">
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

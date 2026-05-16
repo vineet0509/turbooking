@@ -42,6 +42,8 @@ class Tenant(models.Model):
     primary_color = models.CharField(max_length=7, default='#10B981')   # hex color
     secondary_color = models.CharField(max_length=7, default='#064E3B')
     tagline = models.CharField(max_length=200, blank=True)
+    monthly_pass_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    monthly_pass_bookings = models.IntegerField(default=30) # Max 30 slots per month
 
     # Amenities
     amenities = models.JSONField(default=list, blank=True)  # ['Floodlights', 'Parking', etc.]
@@ -50,6 +52,10 @@ class Tenant(models.Model):
     instagram_url = models.URLField(blank=True)
     facebook_url = models.URLField(blank=True)
     whatsapp_number = models.CharField(max_length=15, blank=True)
+    
+    # Payment Settings (Direct to Owner)
+    razorpay_key_id = models.CharField(max_length=255, blank=True)
+    razorpay_key_secret = models.CharField(max_length=255, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -60,8 +60,8 @@ class TurfGroundListCreateView(APIView):
 
     def post(self, request):
         tenant = request.user.owned_tenant
-        
-        # Check subscription limit
+        if not hasattr(tenant, 'subscription') or not tenant.subscription.is_valid:
+            return Response({'error': 'Subscription expired. Please renew to add turfs.'}, status=403)
         try:
             subscription = tenant.subscription
             max_turfs = subscription.plan.max_turfs

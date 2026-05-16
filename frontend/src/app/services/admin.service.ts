@@ -35,4 +35,12 @@ export class AdminService {
   updateTenantStatus(id: string, status: string): Observable<any> {
     return this.http.patch(`${API_BASE}/tenants/${id}/`, { status }, { headers: this.auth.authHeaders });
   }
+
+  getSettings(): Observable<any> {
+    return this.http.get(`${API_BASE}/settings/`, { headers: this.auth.authHeaders });
+  }
+
+  updateSettings(settings: any): Observable<any> {
+    return this.http.post(`${API_BASE}/settings/`, settings, { headers: this.auth.authHeaders });
+  }
 }
